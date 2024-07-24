@@ -22,9 +22,9 @@
 !pom.xml
 !dev/
 !docs/
-!resources/
 !src/
 !test/
+!resources/payload_model.edn
 
 # ------------------------
 # Include Clojure tools
@@ -48,3 +48,4 @@
 # Include ClojureScript Figwheel
 !figwheel-main.edn
 !*.cljs.edn
+
