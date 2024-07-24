@@ -19,25 +19,28 @@
 
    ;; System dependencies
    [org.httpkit.server     :as http-server]
-   [com.brunobonacci.mulog :as mulog]))
+   [com.brunobonacci.mulog :as mulog]
+   
+   ;; Config
+   [aero.core :refer [read-config]]
+   [clojure.java.io :as io]))
 
 ;; ---------------------------------------------------------
 ;; Donut Party System configuration
 
+(def conf (read-config (io/resource "config.edn") {:profile :prod}))
+
 (def main
   "System Component management with Donut"
-  {::donut/defs
-   ;; Option: move :env data to resources/config.edn and parse with aero reader
+  {::donut/defs 
    {:env
     {:app-version "0.1.0"
      :app-env "prod"
-     :http-port (or (System/getenv "SERVICE_HTTP_PORT") 8080)
+     :http-port (:service-port conf)
      :persistence
-     {:database-host (or (System/getenv "POSTGRES_HOST") "http://localhost")
-      :database-port (or (System/getenv "POSTGRES_PORT") "5432")
-      :database-username (or (System/getenv "POSTGRES_USERNAME") "clojure")
-      :database-password (or (System/getenv "POSTGRES_PASSWORD") "clojure")
-      :database-schema (or (System/getenv "POSTGRES_SCHEMA") "clojure")}}
+     {:desal (-> conf :dbtype :postgres :desal)
+      :asistencial (-> conf :dbtype :relativity :asistencial)
+      :maestros (-> conf :dbtype :relativity :maestros)}}
 
      ;; Configure data API connections
      ;; TODO: example system defined with aero

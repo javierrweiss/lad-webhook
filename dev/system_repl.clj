@@ -10,9 +10,15 @@
    [donut.system :as donut]
    [donut.system.repl :as donut-repl]
    [donut.system.repl.state :as donut-repl-state]
-   [sanatoriocolegiales.lad-webhook.system :as system]))
+   [sanatoriocolegiales.lad-webhook.system :as system]
+   [aero.core :refer [read-config]]
+   [clojure.java.io :as io]))
 
+(def conf (read-config (io/resource "config.edn") {:profile :dev}))
 
+(def conexiones {:desal (-> conf :dbtype :postgres :desal)
+                 :asistencial (-> conf :dbtype :relativity :asistencial)
+                 :maestros (-> conf :dbtype :relativity :maestros)})
 ;; ---------------------------------------------------------
 ;; Donut named systems
 ;; `:donut.system/repl` is default named system,
@@ -27,6 +33,8 @@
                     {[:env :app-env] "dev"
                      [:env :app-version] "0.0.0-SNAPSHOT"
                      [:services :http-server ::donut/config :options :join?] false
+                     [:env :persistence] conexiones
+                     [:env :http-port] (:service-port conf)
                      [:services :event-log-publisher ::donut/config]
                      {:publisher {:type :console :pretty? true}}}))
 ;; ---------------------------------------------------------
