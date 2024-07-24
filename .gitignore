@@ -25,6 +25,7 @@
 !src/
 !test/
 !resources/payload_model.edn
+resources/config.edn
 
 # ------------------------
 # Include Clojure tools
