@@ -16,9 +16,9 @@
 
 (def conf (read-config (io/resource "config.edn") {:profile :dev}))
 
-(def conexiones {:desal (-> conf :dbtype :postgres :desal)
-                 :asistencial (-> conf :dbtype :relativity :asistencial)
-                 :maestros (-> conf :dbtype :relativity :maestros)})
+(def conexiones {:desal (-> conf :db-type :postgres :desal)
+                 :asistencial (-> conf :db-type :relativity :asistencial)
+                 :maestros (-> conf :db-type :relativity :maestros)})
 ;; ---------------------------------------------------------
 ;; Donut named systems
 ;; `:donut.system/repl` is default named system,
@@ -62,3 +62,9 @@
   "Return: fully qualified hash-map of system state"
   [] donut-repl-state/system)
 ;; ---------------------------------------------------------
+
+
+(comment
+  (-> conf :dbtype #_:postgres #_:desal)
+  
+  )

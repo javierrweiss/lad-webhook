@@ -46,6 +46,11 @@
   :run/service
   {:main-opts ["-m" "sanatoriocolegiales.lad-webhook.service"]}
   ;; ------------
+
+  :dev {:extra-paths ["dev"]
+        :extra-deps {djblue/portal {:mvn/version "0.57.0"}
+                     com.hyperfiddle/rcf {:mvn/version "20220926-202227"}}}
+
   ;; Add libraries and paths to support additional test tools
   :test/env
   {}
@@ -54,7 +59,9 @@
   ;; call with :watch? true to start file watcher and re-run tests on saved changes
   :test/run
   {:extra-paths ["test"]
-   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.91.1392"}}
+   :jvm-opts    ["-Dhyperfiddle.rcf.generate-tests=true"]
+   :extra-deps  {lambdaisland/kaocha {:mvn/version "1.91.1392"}
+                 com.hyperfiddle/rcf {:mvn/version "20220926-202227"}}
    :main-opts   ["-m" "kaocha.runner"]
    :exec-fn     kaocha.runner/exec-fn
    :exec-args   {:randomize? false

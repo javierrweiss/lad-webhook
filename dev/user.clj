@@ -19,13 +19,14 @@
    [clojure.tools.namespace.repl :refer [set-refresh-dirs]]
    [portal]  ; launch portal
    [portal.api :as inspect]
-
+   [hyperfiddle.rcf]
    ;; Logging
    [com.brunobonacci.mulog :as mulog]  ; Event Logging
    [mulog-events]))                    ; Global context & Tap publisher
 
 ;; ---------------------------------------------------------
 ;; Help
+
 
 (println "---------------------------------------------------------")
 (println "Loading custom user namespace tools...")
@@ -83,6 +84,11 @@
              :ns (ns-publics *ns*))
 ;; ---------------------------------------------------------
 
+;; Iniciando hyperfiddle rcf
+
+(println "Iniciando hyperfiddle rcf para tests...")
+(hyperfiddle.rcf/enable!)
+
 ;; ---------------------------------------------------------
 ;; Hotload libraries into running REPL
 ;; `deps-*` LSP snippets to add dependency forms
@@ -90,6 +96,10 @@
   ;; Require for Clojure 1.11.x and earlier
   (require '[clojure.tools.deps.alpha.repl :refer [add-libs]])
   (add-libs '{domain/library-name {:mvn/version "1.0.0"}})
+
+  (restart)
+ 
+  (tap> (system))
 
   ;; Clojure 1.12.x onward
   #_(add-lib 'library-name)   ; find and add library
