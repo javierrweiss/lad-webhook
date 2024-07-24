@@ -6,24 +6,36 @@
  ;; ---------------------------------------------------------
  :deps
  {;; Service
-  http-kit/http-kit  {:mvn/version "2.8.0"}  ; latest "2.7.0-alpha1"
-  metosin/reitit     {:mvn/version "0.7.0"}
-  metosin/reitit-dev {:mvn/version "0.7.0"} ; human readable exceptions
+  http-kit/http-kit  {:mvn/version "2.8.0"}  
+  metosin/reitit     {:mvn/version "0.7.1"}
+  metosin/reitit-dev {:mvn/version "0.7.1"} ; human readable exceptions
 
   ;; Logging
   ;; create events and send to publisher
   com.brunobonacci/mulog             {:mvn/version "0.9.0"}
   ;; JSON Console out support
   com.brunobonacci/mulog-adv-console {:mvn/version "0.9.0"}
-  ;; Optional: suppress slf4j warning
-  ;; org.slf4j/slf4j-nop {:mvn/version "1.7.32"}
+  ;; Optional: suppress slf4j warning 
+  org.slf4j/slf4j-nop {:mvn/version "1.7.32"}
 
   ;; Drivers
-   RelJDBC/jar {:local/root "resources/RelJDBC.jar"}
+  RelJDBC/jar {:local/root "resources/RelJDBC.jar"}
+  org.postgresql/postgresql {:mvn/version "42.7.3"}
+  com.zaxxer/HikariCP {:mvn/version "5.1.0"}
+
+  ;;SQL
+  com.github.seancorfield/next.jdbc {:mvn/version "1.3.939"}
+  com.github.seancorfield/honeysql {:mvn/version "2.6.1147"}
+
+  ;; JSON
+  cheshire/cheshire {:mvn/version "5.13.0"}
+
+  ;; Crypto
+  buddy/buddy-sign {:mvn/version "3.6.1-359"}
 
   ;; System
   aero/aero           {:mvn/version "1.1.6"}
-  party.donut/system  {:mvn/version "0.0.241"}
+  party.donut/system  {:mvn/version "1.0.254"}
   org.clojure/clojure {:mvn/version "1.11.3"}}
  ;; ---------------------------------------------------------
 
@@ -33,13 +45,6 @@
   ;; Clojure.main execution of application
   :run/service
   {:main-opts ["-m" "sanatoriocolegiales.lad-webhook.service"]}
-
-  ;; Clojure.exec execution of specified function
-  :run/greet
-  {:exec-fn   sanatoriocolegiales.lad-webhook.service/greet
-   :exec-args {:name "Clojure"}}
-  ;; ------------
-
   ;; ------------
   ;; Add libraries and paths to support additional test tools
   :test/env
@@ -60,7 +65,7 @@
   ;; tools.build `build.clj` built script
   :build/task
   {:replace-paths ["."]
-   :replace-deps  {io.github.clojure/tools.build {:mvn/version "0.10.3"}}
+   :replace-deps  {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
    :ns-default    build}}}
   ;; ------------
  ;; ---------------------------------------------------------
