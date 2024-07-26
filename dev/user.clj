@@ -98,7 +98,7 @@
   (add-libs '{domain/library-name {:mvn/version "1.0.0"}})
 
   (restart)
- 
+ (stop)
   (start)
   (tap> (system))
 
