@@ -1,1 +1,0 @@
-(ns sanatoriocolegiales.lad-webhook.sql.conexion)

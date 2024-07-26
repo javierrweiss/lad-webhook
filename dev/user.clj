@@ -99,6 +99,7 @@
 
   (restart)
  
+  (start)
   (tap> (system))
 
   ;; Clojure 1.12.x onward

@@ -1,1 +1,0 @@
-(ns sanatoriocolegiales.lad-webhook.historiasclinicas.historia-clinica)

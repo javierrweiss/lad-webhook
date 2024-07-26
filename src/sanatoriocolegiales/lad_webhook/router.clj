@@ -27,7 +27,7 @@
 
    ;; Service Routing
    [sanatoriocolegiales.lad-webhook.api.system-admin :as system-admin]
-   [sanatoriocolegiales.lad-webhook.api.scoreboard   :as scoreboard]
+   [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as atencion-guardia]
 
    ;; Self-documenting API
    [reitit.swagger    :as api-docs]
@@ -45,18 +45,12 @@
 ;; --------------------------------------------------
 ;; Open API documentation endpoint
 
-(def open-api-docs
-  "Open API docs general information about the service,
-  https://practical.li/clojure-web-services/project/gameboard/
-  keys composed of multiple names should use camelCase"
+(def open-api-docs 
   ["/swagger.json"
    {:get {:no-doc  true
           :swagger {:info {:title "sanatoriocolegiales lad-webhook Service API"
-                           :description "TODO: Provide a meaningful description of the project"
-                           :version "0.1.0"
-                           :termsOfService "https://net.clojars.sanatoriocolegiales/"
-                           :contact {:name "Engineering Team"
-                                     :url "https://net.clojars.sanatoriocolegiales/wiki/engineering-team"}
+                           :description "Webhook para servicios de teleconsultas"
+                           :version "0.1.0" 
                            :license {:name "© Jrivero, 2024"
                                      :url "http://creativecommons.org/licenses/by-sa/4.0/"}
                            :x-logo {:url "./favicon.png"}}}
@@ -93,9 +87,9 @@
 ;; Routing
 
 (defn app
-  "Router for all requests to the Gameboard and OpenAPI documentation,
+  "Router for all requests to the Guardia and OpenAPI documentation,
   using `ring-handler` to manage HTTP request and responses.
-  Arguments: `system-config containt Integrant configuration for the running system
+  Arguments: `system-config containt Donut configuration for the running system
   including persistence connection to store and retrieve data"
   [system-config]
 
@@ -104,7 +98,7 @@
   (ring/ring-handler
    (ring/router
     [;; --------------------------------------------------
-     ;; All routing for Gameboard service
+     ;; All routing for service
 
      ;; OpenAPI Documentation routes
      open-api-docs
@@ -115,12 +109,12 @@
      (system-admin/routes)
 
      ;; --------------------------------------------------
-     ;; sanatoriocolegiales lad-webhook  API routes
+     ;; sanatoriocolegiales lad-webhook API routes
      ["/api"
       ["/v1"
-       (scoreboard/routes system-config)]]]
+       (atencion-guardia/routes system-config)]]]
 
-    ;; End of All routing for Gameboard service
+    ;; End of All routing for Guardia service
     ;; --------------------------------------------------
 
     ;; --------------------------------------------------
