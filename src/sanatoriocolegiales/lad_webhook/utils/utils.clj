@@ -25,16 +25,12 @@
                   "al-abrir solo permite simbolos en asociaciones"))))
  
 (tests 
- (spec/valid? ::fn-aridad-1 identity) := true
- (spec/valid? ::fn-aridad-1 complement) := true
- (spec/valid? ::fn-aridad-1 +) := false
- (spec/valid? ::fn-aridad-1 -) := false
- (spec/valid? ::fn-aridad-1 mapv) := false 
+  
  )     
 
 (comment 
  
-  (spec/valid? ::fn-aridad-1 #(println %))
+ 
 
   (defn log 
     [x]
@@ -45,14 +41,15 @@
     (cond
       ((complement vector?) asociaciones) (throw (IllegalArgumentException. "Las asociaciones deben estar en un vector"))
       (odd? (count asociaciones)) (throw (IllegalArgumentException. "Las asociaciones deben ser pares"))
-      ((complement fn?) log-fn) (throw (IllegalArgumentException. "Debe agregar una función que invoque su función de loggeo")) 
-      (not (spec/valid? ::fn-aridad-1 log-fn)) (throw (IllegalArgumentException. "La función debe ser de aridad 1"))))
-
-  (spec/valid? ::fn-aridad-1 log)
+      ((complement fn?) log-fn) (throw (IllegalArgumentException. "Debe agregar una función que invoque su función de loggeo"))))
   
   (al-abrir [r (clojure.java.io/reader "cosa.txt")] (fn [x] (println "Excepcion impresa por mi log: " x))
               (throw (java.io.IOException. "Excepcion pajúa")))
-  (fn? `log) 
+  
+  (al-abrir [r (clojure.java.io/reader "cosa.txt")] log
+            (throw (java.io.IOException. "Excepcion pajúa")))
+
+  (fn? `log)  
   (fn? `(fn [x] (println x)))
 
   

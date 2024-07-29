@@ -8,13 +8,18 @@
            java.time.LocalDateTime))
 
 (defn ejecuta-transaccion
-  [conn stmt]
-  (with-open [^HikariDataSource d  (connection/->pool com.zaxxer.hikari.HikariDataSource conn)]
-    (jdbc/execute! d stmt)))
+  [conn stmt] 
+  (al-abrir [^HikariDataSource d (connection/->pool com.zaxxer.hikari.HikariDataSource conn)]
+            #(mulog/log ::error-sql :fecha (LocalDateTime/now) :mensaje % :stament stmt)
+            (jdbc/with-transaction [d d] 
+              stmt)))
 
 
 (comment
-  
+  (require '[system-repl :refer [system]])
+  (def desal (-> (system) :donut.system/instances :env :persistence :desal))
+  (ejecuta-transaccion desal ["SELECT * FROM tbl_eventlog_cirugia"])
+  (with-open [ds (jdbc/get-connection desal)])(jdbc/execute! (ds))
   (defn l
     [x]
     (mulog/log ::evento-de-prueba ::error x))
