@@ -1,6 +1,6 @@
 (ns sanatoriocolegiales.lad-webhook.utils.utils
-  (:require [clojure.spec.alpha :as spec]
-            [hyperfiddle.rcf :refer [tests]]))
+  (:require [hyperfiddle.rcf :refer [tests]]
+            [next.jdbc :as jdbc]))
 
 (defmacro al-abrir
   "asociaciones => [name init ...]
@@ -23,7 +23,15 @@
                                       (. ~(asociaciones 0) close))))
     :else (throw (IllegalArgumentException.
                   "al-abrir solo permite simbolos en asociaciones"))))
- 
+
+(defmacro ejecuta-todo
+  [conn & sentencias]
+  (when-not (every? vector? sentencias)
+    (ex-info "Las sentencias deben ser vectores" {:args sentencias}))
+  `(do
+     ~@(for [sentencia sentencias] 
+         `(jdbc/execute! ~conn ~sentencia))))
+  
 (tests 
   
  )     
@@ -48,11 +56,19 @@
   
   (al-abrir [r (clojure.java.io/reader "cosa.txt")] log
             (throw (java.io.IOException. "Excepcion pajúa")))
+  
+  (with-open [r (clojure.java.io/reader "cosa.txt")] 
+            (throw (java.io.IOException. "Excepcion pajúa")))
+  
+  (spit "cosa.txt" "")
 
   (fn? `log)  
   (fn? `(fn [x] (println x)))
 
-  
-  
+  (ejecuta-todo 'ds 'df 'dfd [])
 
+  (ejecuta-todo 'ds ['df] ['dfd] []) 
+  
+  (clojure.walk/macroexpand-all '(ejecuta-todo 'ds ["SELECT * FROM t"] ["INSERT VALUES(1,2,3) INTO X"]))
+  
   ) 

@@ -2,18 +2,18 @@
   (:require [next.jdbc :as jdbc]
             [next.jdbc.connection :as connection]
             [com.brunobonacci.mulog :as mulog]
-            [sanatoriocolegiales.lad-webhook.utils.utils :refer [al-abrir]])
+            [sanatoriocolegiales.lad-webhook.utils.utils :refer [al-abrir ejecuta-todo]])
   (:import com.zaxxer.hikari.HikariDataSource
            java.sql.SQLException
            java.time.LocalDateTime))
 
 (defn ejecuta-transaccion
-  [conn stmt] 
-  (al-abrir [^HikariDataSource d (connection/->pool com.zaxxer.hikari.HikariDataSource conn)]
-            #(mulog/log ::error-sql :fecha (LocalDateTime/now) :mensaje % :stament stmt)
-            (jdbc/with-transaction [d d] 
-              stmt)))
-
+  [ds & stmts] 
+  (al-abrir [^HikariDataSource conn (connection/->pool com.zaxxer.hikari.HikariDataSource ds)]
+            #(mulog/log ::error-sql :fecha (LocalDateTime/now) :mensaje % :staments stmts)
+            (jdbc/with-transaction [conn conn] 
+              (ejecuta-todo conn stmts))))
+ 
 
 (comment
   (require '[system-repl :refer [system]])
