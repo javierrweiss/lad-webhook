@@ -24,8 +24,7 @@
    
    ;; Config
    [aero.core :refer [read-config]]
-   [clojure.java.io :as io]
-   [donut.system :as ds]))
+   [clojure.java.io :as io]))
 
 ;; ---------------------------------------------------------
 ;; Donut Party System configuration
@@ -71,7 +70,7 @@
 
     :conexiones 
     {:maestros #::donut{:start (fn iniciar-conexion
-                                 [{{:keys [specs]} ::donut/config}]
+                                 [{{:keys [specs]} ::donut/config}] 
                                  (crear-conexion-simple specs))
                
                         :stop (fn detener-conexion
@@ -124,8 +123,4 @@
      ;; Configure environment for router application, e.g. database connection details, etc.
      :handler (router/app (donut/ref [:conexiones]))}}})
  
-(defmethod ds/named-system :test
-  [_]
-  (ds/system main {}))
 
- 
