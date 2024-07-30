@@ -122,8 +122,8 @@
 
      ;; Function handling all requests, passing system environment
      ;; Configure environment for router application, e.g. database connection details, etc.
-     :handler (router/app (donut/ref [:env :persistence]))}}})
-
+     :handler (router/app (donut/ref [:conexiones]))}}})
+ 
 (defmethod ds/named-system :test
   [_]
   (ds/system main {}))
