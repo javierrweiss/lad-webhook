@@ -53,6 +53,8 @@
   :dev {:extra-paths ["dev" "test"]
         :extra-deps {djblue/portal {:mvn/version "0.57.0"}
                      com.hyperfiddle/rcf {:mvn/version "20220926-202227"}
+                     clj-test-containers/clj-test-containers {:mvn/version "0.7.4"}
+                     org.testcontainers/postgresql {:mvn/version "1.20.0"}
                      com.github.flow-storm/clojure {:mvn/version "1.11.3-2"}
                      com.github.flow-storm/flow-storm-dbg {:mvn/version "3.17.1"}}
         :classpath-overrides {org.clojure/clojure nil} 
@@ -70,7 +72,8 @@
    :jvm-opts    ["-Dhyperfiddle.rcf.generate-tests=true"]
    :extra-deps  {lambdaisland/kaocha {:mvn/version "1.91.1392"}
                  com.hyperfiddle/rcf {:mvn/version "20220926-202227"}
-                 clj-test-containers/clj-test-containers {:mvn/version "0.7.4"}}
+                 clj-test-containers/clj-test-containers {:mvn/version "0.7.4"}
+                 org.testcontainers/postgresql {:mvn/version "1.20.0"}}
    :main-opts   ["-m" "kaocha.runner"]
    :exec-fn     kaocha.runner/exec-fn
    :exec-args   {:randomize? false
