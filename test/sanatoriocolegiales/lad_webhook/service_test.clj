@@ -1,13 +1,3 @@
-;; ---------------------------------------------------------
-;; sanatoriocolegiales.lad-webhook.service-test
-;;
-;; Example unit tests for sanatoriocolegiales.lad-webhook
-;;
-;; - `deftest` - test a specific function
-;; - `testing` logically group assertions within a function test
-;; - `is` assertion:  expected value then function call
-;; ---------------------------------------------------------
-
 (ns sanatoriocolegiales.lad-webhook.service-test
   (:require [clojure.test :refer [deftest is testing]]
             [sanatoriocolegiales.lad-webhook.service :as lad-webhook]))

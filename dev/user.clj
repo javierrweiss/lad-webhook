@@ -102,6 +102,7 @@
   (start)
   (tap> (system))
 
+  ((-> (system) :donut.system/instances :http :handler))
   ;; Clojure 1.12.x onward
   #_(add-lib 'library-name)   ; find and add library
   #_(sync-deps)               ; load dependencies in deps.edn (if not yet loaded)

@@ -65,6 +65,6 @@
 
 
 (comment
-  (-> conf :dbtype #_:postgres #_:desal)
+  (-> conf  #_#_#_:dbtype :postgres :desal)
   
   )
