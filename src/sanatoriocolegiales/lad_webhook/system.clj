@@ -12,6 +12,7 @@
   (:require
    ;; Application dependencies
    [sanatoriocolegiales.lad-webhook.router :as router]
+   [sanatoriocolegiales.lad-webhook.sql.conexiones :refer [cerrar crear-conexion-simple crear-connection-pool]]
 
    ;; Component system
    [donut.system :as donut]
@@ -23,7 +24,8 @@
    
    ;; Config
    [aero.core :refer [read-config]]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [donut.system :as ds]))
 
 ;; ---------------------------------------------------------
 ;; Donut Party System configuration
@@ -32,7 +34,7 @@
 
 (def main
   "System Component management with Donut"
-  {::donut/defs 
+  {::donut/defs
    {:env
     {:app-version "0.1.0"
      :app-env "prod"
@@ -41,19 +43,6 @@
      {:desal (-> conf :dbtype :postgres :desal)
       :asistencial (-> conf :dbtype :relativity :asistencial)
       :maestros (-> conf :dbtype :relativity :maestros)}}
-
-     ;; Configure data API connections
-     ;; TODO: example system defined with aero
-     ;; :data-api
-     ;; {:game-service-base-url  #or [#env GAME_SERVICE_BASE_URL "http://localhost"]
-     ;;  :llamasoft-api-uri  #or [#env LAMASOFT_API_URI "http://localhost"]
-     ;;  :polybus-report-uri "/report/polybus"
-     ;;  :moose-life-report-uri "/api/v1/report/moose-life"
-     ;;  :minotaur-arcade-report-uri "/api/v2/minotar-arcade"
-     ;;  :gridrunner-revolution-report-uri "/api/v1.1/gridrunner"
-     ;;  :space-giraffe-report-uri "/api/v1/games/space-giraffe"}
-     
-    ;; mulog publisher for a given publisher type, i.e. console, cloud-watch
     :event-log
     {:publisher
      #::donut{:start (fn mulog-publisher-start
@@ -71,15 +60,44 @@
                       (Thread/sleep 250)
                       (instance))
 
-              :config {:global-context {:app-name "sanatoriocolegiales lad-webhook service" 
+              :config {:global-context {:app-name "sanatoriocolegiales lad-webhook service"
                                         :version (donut/ref [:env :app-version])
                                         :environment (donut/ref [:env :app-env])}
                        ;; Publish events to console in json format
                        ;; optionally add `:transform` function to filter events before publishing
-                       :publisher {:type :console-json 
-                                   :pretty? false 
+                       :publisher {:type :console-json
+                                   :pretty? false
                                    #_#_:transform identity}}}}
 
+    :conexiones 
+    {:maestros #::donut{:start (fn iniciar-conexion
+                                 [{{:keys [specs]} ::donut/config}]
+                                 (crear-conexion-simple specs))
+               
+                        :stop (fn detener-conexion
+                                [{::donut/keys [instance]}]
+                                (cerrar instance))
+               
+                        :config {:specs (donut/ref [:env :persistence :maestros])}}
+     :desal #::donut{:start (fn iniciar-conexion
+                              [{{:keys [specs]} ::donut/config}]
+                              (crear-connection-pool specs))
+            
+                     :stop (fn detener-conexion
+                             [{::donut/keys [instance]}]
+                             (cerrar instance))
+            
+                     :config {:specs (donut/ref [:env :persistence :desal])}}
+     :asistencial #::donut{:start (fn iniciar-conexion
+                                    [{{:keys [specs]} ::donut/config}]
+                                    (crear-conexion-simple specs))
+                  
+                           :stop (fn detener-conexion
+                                   [{::donut/keys [instance]}]
+                                   (cerrar instance))
+                  
+                           :config {:specs (donut/ref [:env :persistence :asistencial])}}
+    }
     ;; HTTP server start - returns function to stop the server
     :http
     {:server
@@ -106,5 +124,8 @@
      ;; Configure environment for router application, e.g. database connection details, etc.
      :handler (router/app (donut/ref [:env :persistence]))}}})
 
-;; End of Donut Party System configuration
-;; ---------------------------------------------------------
+(defmethod ds/named-system :test
+  [_]
+  (ds/system main {}))
+
+ 
