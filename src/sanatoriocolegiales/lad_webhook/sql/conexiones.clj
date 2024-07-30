@@ -3,18 +3,22 @@
             [next.jdbc :as jdbc]
             [com.brunobonacci.mulog :as mulog])
   (:import com.zaxxer.hikari.HikariDataSource
-           java.sql.Connection
+           java.sql.Connection 
            java.time.LocalDateTime))
 
 (defn crear-connection-pool ^HikariDataSource
-  [{:keys [specs]}]
-  (mulog/log ::connection-pool-creada :fecha (LocalDateTime/now))
-  (connection/->pool HikariDataSource specs))
+  [specs]
+  (try
+    (mulog/log ::connection-pool-creada :fecha (LocalDateTime/now) :especificaciones specs)
+    (connection/->pool HikariDataSource specs)
+    (catch Exception e (mulog/log ::error-creacion-connection-pool :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
 
 (defn crear-conexion-simple
-  [{:keys [specs]}]
-  (mulog/log ::connexion-simple-creada :fecha (LocalDateTime/now))
-  (jdbc/get-connection specs))
+  [specs]
+  (try
+    (mulog/log ::connexion-simple-creada :fecha (LocalDateTime/now) :especificaciones specs)
+    (jdbc/get-connection specs)
+    (catch Exception e (mulog/log ::error-creacion-conexion-simple :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
 
 (defprotocol Cerrar-conexion
   (cerrar [this]))
@@ -25,3 +29,8 @@
   Connection
   (cerrar [this] (.close this)))
 
+
+(comment
+  (jdbc/get-connection nil)
+  
+  )
