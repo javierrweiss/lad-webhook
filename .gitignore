@@ -24,9 +24,8 @@
 !docs/
 !src/
 !test/
-!resources/payload_model.edn
 resources/config.edn
-!resources/init.sql
+
 
 # ------------------------
 # Include Clojure tools
