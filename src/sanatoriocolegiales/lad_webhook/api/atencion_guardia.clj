@@ -1,17 +1,22 @@
 (ns sanatoriocolegiales.lad-webhook.api.atencion-guardia
   "Atenciones de teleconsulta en guardia con servicio LAD"
   (:require
-   [ring.util.response :refer [response status]]
-   [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [validar]]))
+   [sanatoriocolegiales.error.error :refer [lanza-error]]
+   [ring.util.response :refer [created]]
+   [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [persiste-historia-clinica]]
+   [fmnoise.flow :as flow :refer [then else]]
+   [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request]]))
 
 (defn procesar-atencion
   "Handler para las atenciones. 
    Recibe el request `req` y el estado del sistema `sys`"
   [req sys]
-  (if (validar req)
-    (response "do")
-    (status "Solicitud no autorizada" 401)))
-
+  (->> (valida-request req)
+       (then #(valida-paciente sys %))
+       (then #(persiste-historia-clinica sys %))
+       (then created)
+       (else lanza-error)))
+ 
 (defn routes
   "Reitit route configuration for scoreboard endpoints
   Responses validated with sanatoriocolegiales.lad-webhook.spec clojure.spec"
