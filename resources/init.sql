@@ -47,7 +47,7 @@ CREATE INDEX X_7_8_9 ON Asistencial.tbc_histpac (HistpacEspfir,HistpacNro1,Histp
 CREATE INDEX X_8_9 ON Asistencial.tbc_histpac (HistpacNro1,HistpacFec1);
 CREATE INDEX X_A_B ON Asistencial.tbc_histpac (HistpacNro2,HistpacEspfir1);
 
-CREATE TABLE Asistencial.tbc_guardia (
+CREATE TABLE tbc_guardia (
 	Guar_HistClinica DECIMAL(10,0) NOT NULL,
 	Guar_FechaIngreso INTEGER NOT NULL,
 	Guar_HoraIngreso INTEGER NOT NULL,
