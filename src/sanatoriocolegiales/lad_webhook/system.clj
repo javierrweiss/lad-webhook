@@ -118,9 +118,10 @@
               :config {:handler (donut/local-ref [:handler])
                        :options {:port  (donut/ref [:env :http-port])
                                  :join? true}}}
-
-     ;; Function handling all requests, passing system environment
-     ;; Configure environment for router application, e.g. database connection details, etc.
-     :handler (router/app (donut/ref [:conexiones]))}}})
+     
+     :handler #::donut{:start (fn call-handler 
+                                [{{:keys [db]} ::donut/config}] 
+                                (router/app db))
+                       :config {:db (donut/ref [:conexiones])}}}}})
  
-
+ 

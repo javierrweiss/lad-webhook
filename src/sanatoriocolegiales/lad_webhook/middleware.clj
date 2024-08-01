@@ -22,6 +22,7 @@
                   ;; add key/value pairs for tracking event only
                   {:pairs [:content-type     (get-in request [:headers "content-type"])
                            :content-encoding (get-in request [:headers "content-encoding"])
+                           :content           (:body request)
                            :middleware       id]
                    ;; capture http status code from the response
                    :capture (fn [{:keys [status]}] {:http-status status})}

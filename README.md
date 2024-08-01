@@ -1,21 +1,16 @@
 # sanatoriocolegiales/lad-webhook
 
-```none
-██████╗ ██████╗  █████╗  ██████╗████████╗██╗ ██████╗ █████╗ ██╗     ██╗     ██╗
-██╔══██╗██╔══██╗██╔══██╗██╔════╝╚══██╔══╝██║██╔════╝██╔══██╗██║     ██║     ██║
-██████╔╝██████╔╝███████║██║        ██║   ██║██║     ███████║██║     ██║     ██║
-██╔═══╝ ██╔══██╗██╔══██║██║        ██║   ██║██║     ██╔══██║██║     ██║     ██║
-██║     ██║  ██║██║  ██║╚██████╗   ██║   ██║╚██████╗██║  ██║███████╗███████╗██║
-╚═╝     ╚═╝  ╚═╝╚═╝  ╚═╝ ╚═════╝   ╚═╝   ╚═╝ ╚═════╝╚═╝  ╚═╝╚══════╝╚══════╝╚═╝
-```
-
 ## Project Status
 
-TODO: add status badges for <https://github.com/Jrivero/{{scm/repo>}} workflows and issues
-
-TODO: Provide a meaningful description of the project
+WIP
 
 Project created with [deps-new](https://github.com/seancorfield/deps-new) and the [practicalli/service template](https://github.com/practicalli/project-templates)
+
+## TODOS
+
+1. Está pendiente la definición de al menos una tabla que habría que agregar
+2. Probar integración con testcontainers
+3. Verificar todos los campos que hay que actualizar en tbc_guardia
 
 ## Run the service
 
@@ -23,12 +18,6 @@ Run the service (clojure.main)
 
 ```shell
 clojure -M:run/service
-```
-
-Run the greet function (clojure.exec), optionally passing a `:name` key and value as arguments
-
-```shell
-clojure -X:run/greet :name '"team name"'
 ```
 
 ## Development

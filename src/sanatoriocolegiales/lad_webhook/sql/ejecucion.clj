@@ -18,7 +18,9 @@
  
 (defn ejecuta!
   [conn sentencia]
-  (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-kebab-maps}))
+  (try
+    (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-kebab-maps})
+    (catch SQLException e (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
   
 (comment
   (require '[system-repl :refer [system]])

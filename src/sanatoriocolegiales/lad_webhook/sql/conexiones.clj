@@ -24,6 +24,8 @@
   (cerrar [this]))
 
 (extend-protocol Cerrar-conexion
+  nil
+  (cerrar [this] this)
   HikariDataSource
   (cerrar [this] (.close this))
   Connection

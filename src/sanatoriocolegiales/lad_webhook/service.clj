@@ -51,18 +51,12 @@
 ;; --------------------------------------------------
 ;; Example clojure.exec function
 
-(defn greet
-  "Greeting message via Clojure CLI clojure.exec"
-  ;; TODO: call greet with hash-map argument
-  ([] (greet "secret engineering"))
-  ([{:keys [team-name]}]
-   (str "sanatoriocolegiales lad-webhook service developed by the " team-name " team")))
 
 
 (comment
   ;; --------------------------------------------------
   ;; REPL workflow commands
 
-  (greet {:team-name "Jrivero"}))
+  )
 
-   ; End of rich comment
+
