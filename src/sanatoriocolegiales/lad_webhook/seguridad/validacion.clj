@@ -7,7 +7,8 @@
 
 (defn valida-request
   [req-body]
-  (if req-body
+  (throw (ex-info "Solicitud no autorizada" req-body))
+  #_(if req-body
     req-body
     (throw (ex-info "Solicitud no autorizada" req-body)))) 
 
