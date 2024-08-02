@@ -14,8 +14,8 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
 [X] 4. Implementar middleware para manejo de excepciones 
 [] 5. Implementar autenticación por JWT
 [] 6. Implementar tests para handlers
-[] 7. Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
-[] 8. Corregir problema de conexión con SQLite usando Hikari
+[X] 7. Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
+[X] 8. Corregir problema de conexión con SQLite usando Hikari
 
 ## Run the service
 

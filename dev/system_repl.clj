@@ -12,7 +12,8 @@
    [donut.system.repl.state :as donut-repl-state]
    [sanatoriocolegiales.lad-webhook.system :as system]
    [aero.core :refer [read-config]]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [sql-auxiliar :refer [crear-tabla-tbc-hist-pac crear-tabla-tbc-guardia crear-tabla-tbl-hist-txt]]))
 
 (def conf (read-config (io/resource "config.edn") {:profile :dev}))
 
@@ -20,9 +21,11 @@
                  :asistencial (-> conf :db-type :relativity :asistencial)
                  :maestros (-> conf :db-type :relativity :maestros)})
 
-(def conexiones2 {:desal "jdbc:sqlite::memory:"
-                  :asistencial "jdbc:sqlite::memory:"
-                  :maestros "jdbc:sqlite::memory:"})
+(def conexiones2 {:desal {:jdbcUrl "jdbc:sqlite:desal.db"}
+                  :asistencial "jdbc:sqlite:asistencial.db"
+                  :maestros "jdbc:sqlite:maestros.db"})
+
+
 ;; ---------------------------------------------------------
 ;; Donut named systems
 ;; `:donut.system/repl` is default named system,
@@ -38,6 +41,15 @@
                      [:env :app-version] "0.0.0-SNAPSHOT"
                      [:services :http-server ::donut/config :options :join?] false
                      [:env :persistence] conexiones2
+                     [:conexiones :maestros ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                                                                  (println "Ejecutando..."))
+                     [:conexiones :desal ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                                                               (println "Ejecutando post-start desal...")
+                                                               (crear-tabla-tbl-hist-txt specs))
+                     [:conexiones :asistencial ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                                                                     (println "Ejecutando post-start asistencial...")
+                                                                     (crear-tabla-tbc-guardia specs)
+                                                                     (crear-tabla-tbc-hist-pac specs))
                      [:env :http-port] (:service-port conf)
                      [:services :event-log-publisher ::donut/config]
                      {:publisher {:type :console :pretty? true}}}))
@@ -69,6 +81,6 @@
 
 
 (comment
-  (-> conf  #_#_#_:dbtype :postgres :desal)
+  (donut/system :dev {[:env :persistence] conexiones2})
   
   )

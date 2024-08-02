@@ -100,13 +100,19 @@
   ;; Require for Clojure 1.11.x and earlier
   (require '[clojure.tools.deps.alpha.repl :refer [add-libs]])
   (add-libs '{domain/library-name {:mvn/version "1.0.0"}})
-          
+           
   (restart)
- (stop)     
-  (start)  
+  (stop)     
+  (start) 
+  
+  
   (tap> (:donut.system/instances (system))) 
   #'system
   ((-> (system) :donut.system/instances :http :handler))
+
+
+
+
   ;; Clojure 1.12.x onward
   #_(add-lib 'library-name)   ; find and add library
   #_(sync-deps)               ; load dependencies in deps.edn (if not yet loaded)

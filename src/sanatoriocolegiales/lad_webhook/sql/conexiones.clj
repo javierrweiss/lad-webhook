@@ -32,7 +32,9 @@
   (cerrar [this] (.close this)))
 
 
-(comment
+(comment 
   (jdbc/get-connection nil)
-  
-  )
+  (def conn (connection/->pool HikariDataSource {:jdbcUrl "jdbc:sqlite:bochinche.db"}))
+  (jdbc/execute! conn ["CREATE TABLE anunaki (id int not null, valor varchar)"])
+  (cerrar conn)  
+  ) 
