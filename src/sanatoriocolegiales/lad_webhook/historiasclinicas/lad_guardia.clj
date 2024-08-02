@@ -26,7 +26,7 @@
         asistencial (-> db :asistencial)]
     (ejecuta! asistencial (inserta-en-tbc-histpac registro-historia-paciente))
     (ejecuta! desal (inserta-en-tbl-hist-txt registro-historia-texto))
-    (ejecuta! asistencial (actualiza-tbc-guardia registro-guardia))))
+    (ejecuta! asistencial (actualiza-tbc-guardia registro-guardia)))) ;; Estas grabaciones se podrían hacer en paralelo
 
 (defn persiste-historia-clinica
   "Toma el request y crea la historia clínica del paciente. Recibe el request y la conexión a la BD."

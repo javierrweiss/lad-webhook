@@ -1,45 +1,27 @@
-;; --------------------------------------------------
-;; sanatoriocolegiales.lad-webhook router
-;;
-;; Each section of the API is defined in its own routes namespace
-;; with an accompanying handler namespace
-;;
-;; reitit - routing and middleware
-;; ring - request / response management
-;; muuntaja - coercion (data transformation)
-;; --------------------------------------------------
-
-
 (ns sanatoriocolegiales.lad-webhook.router
   "API global request routing"
   (:require
    ;; Core Web Application Libraries
    [reitit.ring   :as ring]
    [muuntaja.core :as muuntaja]
-
    ;; Routing middleware
    [reitit.ring.middleware.muuntaja   :as middleware-muuntaja]
    [reitit.ring.middleware.parameters :as parameters]
-   ;; [reitit.ring.middleware.exception  :as exception]
-
    ;; Service middleware
    [sanatoriocolegiales.lad-webhook.middleware :as middleware-service]
-
+   [sanatoriocolegiales.error.error :refer [exception-middleware]]
    ;; Service Routing
    [sanatoriocolegiales.lad-webhook.api.system-admin :as system-admin]
    [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as atencion-guardia]
-
    ;; Self-documenting API
    [reitit.swagger    :as api-docs]
    [reitit.swagger-ui :as api-docs-ui]
-
    ;; Provide details of parameters to API documentation UI (swagger)
    [reitit.coercion.spec]
    [reitit.ring.coercion :as coercion]
-
    ;; Error handling
    [reitit.dev.pretty :as pretty]
-   [com.brunobonacci.mulog :as mulog]  ; Event Logging
+   [com.brunobonacci.mulog :as mulog]  ; Event Logging 
    ))
 
 ;; --------------------------------------------------
@@ -72,6 +54,8 @@
                        parameters/parameters-middleware
                        ;; content-negotiation
                        middleware-muuntaja/format-middleware
+                       ;; exceptions
+                       exception-middleware
                        ;; coercing response bodys
                        coercion/coerce-response-middleware
                        ;; coercing request parameters

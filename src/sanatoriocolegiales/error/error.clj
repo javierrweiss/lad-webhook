@@ -1,23 +1,21 @@
 (ns sanatoriocolegiales.error.error
   (:require [ring.util.response :refer [status]]
-            [reitit.ring.middleware.exception :as exception])
-  (:import java.sql.SQLException))
-
-(defn lanza-error
-  [^Throwable err]
-  (assoc (ex-data err)
-         :error (ex-message err)))
+            [reitit.ring.middleware.exception :as exception]
+            [com.brunobonacci.mulog :as mulog])
+  (:import java.sql.SQLException
+           java.time.LocalDateTime))
 
 (defn handler
-  [^Throwable err _]
-  (let [mensaje (ex-message err)]
-    (condp = mensaje
-      "Solicitud no autorizada" (status "Solicitud no autorizada" 401)
-      "Paciente no encontrado" (status "El paciente referido no fue encontrado" 404)
-      (status (str "Hubo un error inesperado en el servidor:\n" mensaje) 500))))
+  [mensaje _ _]
+  mensaje)
 
 (def exception-middleware
   (exception/create-exception-middleware 
    (merge 
     exception/default-handlers
-    {SQLException (partial handler)})))
+    {SQLException (partial handler (status {:body "Hubo un error con la base de datos"} 500)) 
+     ::no-autorizada (partial handler (status {:body "Solicitud no autorizada (desde middleware)"} 401))
+     ::recurso-no-encontrado (partial handler (status {:body "No se encontró el paciente"} 404))
+     ::exception/wrap (fn [handler e request]
+                        (mulog/log ::excepcion-en-solicitud :mensaje (ex-message e) :fecha (LocalDateTime/now) :solicitud request)
+                        (handler e request))}))) 
