@@ -39,9 +39,10 @@
      :app-env "prod"
      :http-port (:service-port conf)
      :persistence
-     {:desal (-> conf :dbtype :postgres :desal)
-      :asistencial (-> conf :dbtype :relativity :asistencial)
-      :maestros (-> conf :dbtype :relativity :maestros)}}
+     {:desal (-> conf :db-type :postgres :desal)
+      :asistencial (-> conf :db-type :relativity :asistencial)
+      :maestros (-> conf :db-type :relativity :maestros)
+      :bases_auxiliares (-> conf :db-type :postgres :bases_auxiliares)}}
     :event-log
     {:publisher
      #::donut{:start (fn mulog-publisher-start
@@ -96,6 +97,13 @@
                                    (cerrar instance))
                   
                            :config {:specs (donut/ref [:env :persistence :asistencial])}}
+     :bases_auxiliares #::donut{:start (fn iniciar-conexion
+                                         [{{:keys [specs]} ::donut/config}]
+                                         (crear-connection-pool specs))
+                                :stop (fn detener-conexion
+                                        [{::donut/keys [instance]}]
+                                        (cerrar instance))
+                                :config {:specs (donut/ref [:env :persistence :bases_auxiliares])}}
     }
     ;; HTTP server start - returns function to stop the server
     :http

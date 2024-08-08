@@ -8,14 +8,15 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
 
 ## TODOS
 
-[] 1. Está pendiente la definición de al menos una tabla que habría que agregar
-[] 2. Probar integración con testcontainers
-[] 3. Verificar todos los campos que hay que actualizar en tbc_guardia
-[X] 4. Implementar middleware para manejo de excepciones 
-[] 5. Implementar autenticación por JWT
-[] 6. Implementar tests para handlers
-[X] 7. Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
-[X] 8. Corregir problema de conexión con SQLite usando Hikari
+[X] Está pendiente la definición de al menos una tabla que habría que agregar
+[ ] Faltaría la tabla de tbc_patologia
+[] Probar integración con testcontainers
+[] Verificar todos los campos que hay que actualizar en tbc_guardia
+[X] Implementar middleware para manejo de excepciones 
+[] Implementar autenticación por JWT
+[] Implementar tests para autenticación y generación de registros
+[X] Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
+[X] Corregir problema de conexión con SQLite usando Hikari
 
 ## Run the service
 

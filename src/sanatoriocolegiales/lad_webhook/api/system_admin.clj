@@ -1,29 +1,11 @@
-;; --------------------------------------------------
-;; System Administration and Status check
-;;
-;; - return service status response
-;; --------------------------------------------------
-
-
 (ns sanatoriocolegiales.lad-webhook.api.system-admin
-  "Gameboard API system administration handlers"
   (:require [ring.util.response :refer [response]]))
-
-
-;; --------------------------------------------------
-;; Status of Service
 
 (def status
   "Simple status report for external monitoring services, e.g. Pingdom
   Return:
   - `constantly` returns an anonymous function that returns a ring response hash-map"
   (constantly (response {:application "sanatoriocolegiales lad-webhook Service" :status "Alive"})))
-
-;; --------------------------------------------------
-
-
-;; --------------------------------------------------
-;; Router
 
 (defn routes
   "Reitit route configuration for system-admin endpoint"
@@ -36,4 +18,3 @@
            :responses {200 {:body {:application string? :status string?}}}
            :handler status}}]])
 
-;; --------------------------------------------------

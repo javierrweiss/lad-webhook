@@ -13,17 +13,22 @@
    [sanatoriocolegiales.lad-webhook.system :as system]
    [aero.core :refer [read-config]]
    [clojure.java.io :as io]
-   [sql-auxiliar :refer [crear-tabla-tbc-hist-pac crear-tabla-tbc-guardia crear-tabla-tbl-hist-txt]]))
+   [sql-auxiliar :refer [crear-tabla-tbc-hist-pac 
+                         crear-tabla-tbc-guardia 
+                         crear-tabla-tbl-hist-txt
+                         crear-tabla-tbl-ladguardia-fallidos]]))
 
 (def conf (read-config (io/resource "config.edn") {:profile :dev}))
 
 (def conexiones {:desal (-> conf :db-type :postgres :desal)
                  :asistencial (-> conf :db-type :relativity :asistencial)
-                 :maestros (-> conf :db-type :relativity :maestros)})
+                 :maestros (-> conf :db-type :relativity :maestros)
+                 :bases_auxiliares (-> conf :db-type :postgres :bases_auxiliares)})
 
 (def conexiones2 {:desal {:jdbcUrl "jdbc:sqlite:desal.db"}
                   :asistencial "jdbc:sqlite:asistencial.db"
-                  :maestros "jdbc:sqlite:maestros.db"})
+                  :maestros "jdbc:sqlite:maestros.db"
+                  :bases_auxiliares {:jdbcUrl "jdbc:sqlite:bases_auxiliares.db"}})
 
 
 ;; ---------------------------------------------------------
@@ -50,6 +55,9 @@
                                                                      (println "Ejecutando post-start asistencial...")
                                                                      (crear-tabla-tbc-guardia specs)
                                                                      (crear-tabla-tbc-hist-pac specs))
+                     [:conexiones :bases_auxiliares ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                                                                          (println "Ejecutando post-start bases auxiliares")
+                                                                          (crear-tabla-tbl-ladguardia-fallidos specs))
                      [:env :http-port] (:service-port conf)
                      [:services :event-log-publisher ::donut/config]
                      {:publisher {:type :console :pretty? true}}}))

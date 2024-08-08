@@ -120,3 +120,17 @@
 	ht_estudios varchar(7800) NULL,
 	CONSTRAINT pk_hist_txt PRIMARY KEY (ht_histclin, ht_fecha, ht_hora, ht_entrada)
 )"]))
+
+(defn crear-tabla-tbl-ladguardia-fallidos
+  [conn]
+  (jdbc/execute! conn ["CREATE TABLE IF NOT EXISTS tbl_ladguardia_fallidos(
+                        id bigserial NOT NULL PRIMARY KEY,
+                        hc int,
+                        fechaingreso int,
+                        horaingreso int,
+                        nombre varchar,
+                        textohc varchar,
+                        patolcie varchar,
+                        diagnostico varchar,
+                        motivo varchar
+)"]))

@@ -58,6 +58,19 @@
                          :ht_estudios ]
                :values [values]}))
 
+(defn inserta-en-tbl-ladguardia-fallidos
+  [values]
+  (sql/format {:insert-into :tbl_ladguardia_fallidos
+               :columns [:hc
+                         :fechaingreso
+                         :horaingreso
+                         :nombre 
+                         :textohc 
+                         :patolcie 
+                         :diagnostico
+                         :motivo]
+               :values [values]}))
+
 (defn actualiza-tbc-guardia
   [{:keys [histclinica fecha hora]}]
   (sql/format {:update :tbc_guardia
