@@ -1,4 +1,4 @@
-(ns sanatoriocolegiales.error.error
+(ns sanatoriocolegiales.lad-webhook.error.error
   (:require [ring.util.response :refer [status]]
             [reitit.ring.middleware.exception :as exception]
             [com.brunobonacci.mulog :as mulog])

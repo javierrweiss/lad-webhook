@@ -1,8 +1,9 @@
 (ns sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia
   (:require [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac inserta-en-tbl-hist-txt actualiza-tbc-guardia]]
-            [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta!]]))
+            [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta!]]
+            [hyperfiddle.rcf :refer [tests]]))
 
-(defn- request->registros
+(defn request->registros
   "Adapta el mapa que viene del request y devuelve un vector con tres registros (también vectores) listos para ser persistidos"
   [request-body]
   (let [main-map (merge 
@@ -18,7 +19,7 @@
         hc (get-in main-map [:patient_external_id :uid])]
     [nil nil nil]))
 
-(defn- crea-historia-clinica
+(defn crea-historia-clinica
   "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
   [db registro-guardia registro-historia-paciente registro-historia-texto]
   (let [maestros (-> db :maestros)
@@ -41,3 +42,8 @@
     (merge (select-keys (:z m) [:c]) (select-keys m [:a]))) 
   
   )
+
+(tests
+ 
+ 
+ )

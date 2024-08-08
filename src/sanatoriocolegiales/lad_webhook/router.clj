@@ -9,7 +9,7 @@
    [reitit.ring.middleware.parameters :as parameters]
    ;; Service middleware
    [sanatoriocolegiales.lad-webhook.middleware :as middleware-service]
-   [sanatoriocolegiales.error.error :refer [exception-middleware]]
+   [sanatoriocolegiales.lad-webhook.error.error :refer [exception-middleware]]
    ;; Service Routing
    [sanatoriocolegiales.lad-webhook.api.system-admin :as system-admin]
    [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as atencion-guardia]
