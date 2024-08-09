@@ -15,8 +15,9 @@
    [clojure.java.io :as io]
    [sql-auxiliar :refer [crear-tabla-tbc-hist-pac 
                          crear-tabla-tbc-guardia 
-                         crear-tabla-tbl-hist-txt
-                         crear-tabla-tbl-ladguardia-fallidos]]))
+                         crear-tabla-tbc-histpac-txt
+                         crear-tabla-tbl-ladguardia-fallidos
+                         crear-tabla-tbl-parametros]]))
 
 (def conf (read-config (io/resource "config.edn") {:profile :dev}))
 
@@ -47,14 +48,15 @@
                      [:services :http-server ::donut/config :options :join?] false
                      [:env :persistence] conexiones2
                      [:conexiones :maestros ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
-                                                                  (println "Ejecutando..."))
+                                                                  (println "Ejecutando post-start maestros..."))
                      [:conexiones :desal ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                (println "Ejecutando post-start desal...")
-                                                               (crear-tabla-tbl-hist-txt specs))
+                                                               (crear-tabla-tbl-parametros specs))
                      [:conexiones :asistencial ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                      (println "Ejecutando post-start asistencial...")
                                                                      (crear-tabla-tbc-guardia specs)
-                                                                     (crear-tabla-tbc-hist-pac specs))
+                                                                     (crear-tabla-tbc-hist-pac specs)
+                                                                     (crear-tabla-tbc-histpac-txt specs))
                      [:conexiones :bases_auxiliares ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                           (println "Ejecutando post-start bases auxiliares")
                                                                           (crear-tabla-tbl-ladguardia-fallidos specs))

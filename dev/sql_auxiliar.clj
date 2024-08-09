@@ -133,3 +133,15 @@
                         diagnostico varchar,
                         motivo varchar
 )"]))
+
+(defn crear-tabla-tbl-parametros
+  [conn]
+  (jdbc/execute! conn ["CREATE TABLE IF NOT EXISTS tbl_parametros (
+	paramid int4 NOT NULL,
+	fechadb date NULL,
+	fechacbl int4 NULL,
+	contador_entero numeric(10) NULL,
+	contador_decimal numeric(10, 2) NULL,
+	comentario bpchar(50) NULL,
+	CONSTRAINT tbl_parametros_pkey PRIMARY KEY (paramid)
+)"]))
