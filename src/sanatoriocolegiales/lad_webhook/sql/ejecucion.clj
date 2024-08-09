@@ -1,10 +1,12 @@
 (ns sanatoriocolegiales.lad-webhook.sql.ejecucion
   (:require [next.jdbc :as jdbc] 
             [next.jdbc.result-set :as rs]
-            [com.brunobonacci.mulog :as mulog])
+            [com.brunobonacci.mulog :as mulog]
+            [fmnoise.flow :as flow :refer [then else]]
+            [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [obtener-numerador actualiza-numerador]])
   (:import java.time.LocalDateTime
            java.sql.SQLException))
-
+ 
 (defmacro ejecutar-todo!
   [conn & sentencias]
   (when-not (every? vector? sentencias)
@@ -21,6 +23,18 @@
   (try
     (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-kebab-maps})
     (catch SQLException e (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
+
+(defn obtiene-numerador!
+  [db]
+  (try
+    (jdbc/with-transaction [conn db]
+      (->  (jdbc/execute! conn (obtener-numerador) {:builder-fn rs/as-unqualified-kebab-maps})
+           (then #(-> % first :contador_entero))
+           (then #(jdbc/execute! conn (actualiza-numerador %) {:builder-fn rs/as-unqualified-kebab-maps}))
+           (then #(-> % first :contador_entero))
+           (else #(throw (ex-info "Hubo un problema al obtener el numerador" {:fecha (LocalDateTime/now)
+                                                                              :message (ex-message %)})))))
+    (catch SQLException e (mulog/log ::excepcion-transaccion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
     
 (comment  
   (macroexpand '(ejecutar-todo! desal ["SELECT * FROM tbl_eventlog_cirugia"] ["SELECT * FROM tbl_eventlog_cirugia"] ["SELECT * FROM tbl_eventlog_cirugia"]))
@@ -51,7 +65,9 @@
                   ["SELECT * FROM tbc_guardia"])
    
 
-   
+   (if-let [paciente (seq (ejecuta! asistencial (sanatoriocolegiales.lad-webhook.sql.enunciados/selecciona-guardia 180022 20240808 1430)))]
+     paciente
+     :not-found)
   
 
   )
