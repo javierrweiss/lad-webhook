@@ -108,17 +108,16 @@
 	               GuarNropres INTEGER,
 	               CONSTRAINT X_1_2_3 PRIMARY KEY (Guar_HistClinica,Guar_FechaIngreso,Guar_HoraIngreso))"]))
 
-(defn crear-tabla-tbl-hist-txt
+(defn crear-tabla-tbc-histpac-txt
   [conn]
-  (jdbc/execute! conn ["CREATE TABLE IF NOT EXISTS tbl_hist_txt (
-	ht_histclin numeric(10) NOT NULL,
-	ht_fecha numeric(8) NOT NULL,
-	ht_hora numeric(8) NOT NULL,
-	ht_entrada numeric(1) NOT NULL,
-	ht_motivo varchar(7800) NULL,
-	ht_tratamiento varchar(7800) NULL,
-	ht_estudios varchar(7800) NULL,
-	CONSTRAINT pk_hist_txt PRIMARY KEY (ht_histclin, ht_fecha, ht_hora, ht_entrada)
+  (jdbc/execute! conn ["CREATE TABLE IF NOT EXISTS tbc_histpac_txt (
+	Txt1 DECIMAL(10,0) NOT NULL,
+	Txt1g INTEGER NOT NULL,
+	Txt2 INTEGER NOT NULL,
+	Txt3 INTEGER NOT NULL,
+	Txt4 CHAR(78) NOT NULL,
+	Txt6 INTEGER,
+	CONSTRAINT X_1_2_3_4 PRIMARY KEY (Txt1,Txt1g,Txt2,Txt3)
 )"]))
 
 (defn crear-tabla-tbl-ladguardia-fallidos
