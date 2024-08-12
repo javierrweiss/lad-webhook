@@ -85,7 +85,7 @@
 
 (defn selecciona-guardia
   [histclinica fecha hora]
-  (sql/format {:select [:guar_histclinica :guar_fechaingreso :guar_horaingreso :guar_obra :guar_plan]
+  (sql/format {:select [:guar_histclinica :guar_fechaingreso :guar_horaingreso :guar_obra :guar_plan :guar_nroben]
                :from :tbc_guardia
                :where [:and [:= :guar_histclinica histclinica] [:= :guar_fechaingreso fecha] [:= :guar_horaingreso hora]]}))
 
