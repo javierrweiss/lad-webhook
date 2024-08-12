@@ -1,8 +1,7 @@
 (ns sanatoriocolegiales.lad-webhook.seguridad.validacion
   (:require [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta!]]
             [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [selecciona-guardia inserta-en-tbl-ladguardia-fallidos]]
-            [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [extraer-fecha-y-hora obtener-hora-finalizacion]]
-            [hyperfiddle.rcf :refer [tests]]
+            [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [extraer-fecha-y-hora obtener-hora-finalizacion]] 
             [clojure.java.io :as io]))
 
 (defn valida-request
@@ -56,9 +55,6 @@
                                                   :fecha fecha
                                                   :hora hora
                                                   :hc patient_external_id}))))))
-(tests
- 
- )
 
 (comment
 

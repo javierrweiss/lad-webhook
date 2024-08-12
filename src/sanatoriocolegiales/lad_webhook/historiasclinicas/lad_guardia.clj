@@ -2,8 +2,7 @@
   (:require [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac 
                                                                     inserta-en-tbc-histpac-txt 
                                                                     actualiza-tbc-guardia]]
-            [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]]
-            [hyperfiddle.rcf :refer [tests]]
+            [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]] 
             [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora obtener-minutos]]))
 
 (defn prepara-registros
@@ -15,11 +14,10 @@
            hora_final_atencion 
            fecha_inicio_atencion 
            guar-obra 
-           guar-plan 
-           diagnostico 
-           motivo 
-           historia 
-           nombre 
+           guar-plan
+           guar-nroben
+           diagnostico  
+           historia  
            patologia 
            histpactratam
            medico
@@ -63,7 +61,7 @@
     guar-obra
     guar-plan
     guar-plan
-    " " ;;afiliado, no lo tengo
+    guar-nroben 
     0
     ""
     0
@@ -132,5 +130,3 @@
 (->> 1152 str (drop 2) (apply str) (Integer/parseInt))
 
 :rcf)
-
-(tests)
