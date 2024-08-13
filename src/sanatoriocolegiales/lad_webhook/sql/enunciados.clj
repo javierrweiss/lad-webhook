@@ -3,6 +3,7 @@
 
 (defn inserta-en-tbc-histpac
   [values]
+  (tap> (str "Insertando en tbc_histpac " (values 1) (values 2) (values 3)))
   (sql/format {:insert-into :tbc_histpac
                :columns [:histpacnro ;; hc
                          :histpacfec ;; fecha ingreso tbc_guardia
@@ -16,7 +17,7 @@
                          :histpacnro2 ;; hc
                          :histpacespfir1 ;; código de especialidad
                          :histpacmedfir ;; código de médico (Pendiente!!)
-                         :histpacmotivo ;; 0
+                         :histpacmotivo ;; numerador => Hace referencia al diagnóstico
                          :histpacestudi ;; 0 
                          :histpachorasobre ;; 0
                          :histpachfinal ;; hora final atención
@@ -51,7 +52,7 @@
   [values]
   (sql/format {:insert-into :tbc_histpac_txt
                :columns [:txt1
-                         :txtg1 
+                         :txt1g 
                          :txt2 
                          :txt3 
                          :txt4 
@@ -72,10 +73,10 @@
                :values [values]}))
 
 (defn actualiza-tbc-guardia
-  [{:keys [histclinica fecha hora diagnostico hora-atencion fecha-atencion]}]
+  [[histclinica fecha hora diagnostico hora-atencion fecha-atencion]]
   (sql/format {:update :tbc_guardia
                :set {:guar_estado 4 
-                     :guar_dianostico diagnostico 
+                     :guar_diagnostico diagnostico        ;; Es el código de patología
                      :guar_fechaalta fecha-atencion
                      :guar_horaalta hora-atencion}
                :where [:and 
@@ -92,12 +93,21 @@
 (defn obtener-numerador
   []
   (sql/format {:select :contador_entero
-               :from :tbc_guardia
-               :where [:= :param_id 16]}))
+               :from :tbl_parametros
+               :where [:= :paramid 16]}))
  
 (defn actualiza-numerador
   [numerador_actual]
   (sql/format {:update :tbl_parametros
-               :set [:= :contador_entero (inc numerador_actual)]
-               :where [:= :param_id 16]
-               :returning [:contador_entero]}))
+               :set  {:contador_entero (inc numerador_actual)}
+               :where [:= :paramid 16]
+               :returning [:contador_entero]})) 
+
+
+(comment
+  (let [numerador_actual 1]
+    (sql/format {:update :tbl_parametros
+                 :set  {:contador_entero (inc numerador_actual)}
+                 :where [:= :paramid 16]
+                 :returning [:contador_entero]})) 
+  )

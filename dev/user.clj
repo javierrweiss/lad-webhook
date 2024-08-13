@@ -104,8 +104,8 @@
   (restart)
   (stop)     
   (start) 
-    
-   
+        
+     
   (tap> (:donut.system/instances (system))) 
   #'system
   ((-> (system) :donut.system/instances :http :handler))
@@ -124,18 +124,30 @@
 (comment
   ;; Open a portal inspector in browser window - light theme
   ;; (inspect/open {:portal.colors/theme :portal.colors/solarized-light})
-
+  
   (inspect/clear) ; Clear all values in portal window (allows garbage collection)
-
+  
   (remove-tap #'inspect/submit) ; Remove portal from `tap>` sources
-
+  
   (mulog-events/stop) ; stop tap publisher
-
+  
   (inspect/close); Close the portal window
-
+  
   (inspect/open)
 
   (inspect/docs) ; View docs locally via Portal
+  
+   
+  (.availableProcessors (java.lang.Runtime/getRuntime))
+
+  (dotimes [_ 10]
+    (println "Usando java nio")
+    (time
+     (let [path (java.nio.file.Path/of (.toURI (io/resource "payload_model.edn")))]
+       (java.nio.file.Files/readString path)))  
+    (println "Usando el reader implementado por Clojure") 
+    (time 
+     (slurp (io/resource "payload_model.edn"))))
 
   #_()) ; End of rich comment
 

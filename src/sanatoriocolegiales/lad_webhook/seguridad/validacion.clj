@@ -24,16 +24,17 @@
                 doctor_name
                 doctor_enrollment_type
                 patient_name
-                patient_external_id]} event_object 
+                patient_external_id ;; Acá recibimos el número de HC
+                ]} event_object 
         [fecha hora] (extraer-fecha-y-hora order_id)
         [fecha-ini hora-ini] (extraer-fecha-y-hora call_start_datetime)
         hora-finalizacion (obtener-hora-finalizacion hora-ini call_duration)]
     (if-let [paciente (seq (ejecuta! asistencial (selecciona-guardia patient_external_id fecha hora)))]
       (assoc
        (first paciente) 
-       :fecha_inicio_atencion fecha-ini
-       :hora_inicio_atencion hora-ini
-       :hora_final_atencion hora-finalizacion
+       :fecha-inicio-atencion fecha-ini
+       :hora-inicio-atencion hora-ini
+       :hora-final-atencion hora-finalizacion
        :diagnostico call_diagnosis
        :matricula (Integer/parseInt doctor_enrollment_type)
        :medico doctor_name
@@ -41,7 +42,7 @@
        :historia call_doctor_comment
        :nombre patient_name
        :hc (Integer/parseInt patient_external_id)
-       :patologia (Integer/parseInt call_cie10))
+       :patologia call_cie10)
       (do
         (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [patient_external_id
                                                                         fecha
@@ -57,9 +58,13 @@
                                                   :hc patient_external_id}))))))
 
 (comment
-
+  
   (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string))
 
+  (let [conexiones {:asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+                    :bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares)}]
+    (valida-paciente conexiones request))
+  
   ;; No hay ventaja en desempeño ni en legibilidad para usar una sola desestructuración
   (dotimes [_ 10]
     (println "Una sola desestructuración....")

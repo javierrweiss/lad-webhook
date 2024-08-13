@@ -122,8 +122,7 @@
 
 (defn crear-tabla-tbl-ladguardia-fallidos
   [conn]
-  (jdbc/execute! conn ["CREATE TABLE IF NOT EXISTS tbl_ladguardia_fallidos(
-                        id bigserial NOT NULL PRIMARY KEY,
+  (jdbc/execute! conn ["CREATE TABLE IF NOT EXISTS tbl_ladguardia_fallidos( 
                         hc int,
                         fechaingreso int,
                         horaingreso int,

@@ -10,9 +10,9 @@
   [{:keys [guar-hist-clinica 
            guar-fecha-ingreso 
            guar-hora-ingreso
-           hora_inicio_atencion
-           hora_final_atencion 
-           fecha_inicio_atencion 
+           hora-inicio-atencion
+           hora-final-atencion 
+           fecha-inicio-atencion 
            guar-obra 
            guar-plan
            guar-nroben
@@ -20,15 +20,17 @@
            historia  
            patologia 
            histpactratam
+           histpacmotivo 
            medico
            matricula]}] 
  (let [hora (obtener-hora guar-hora-ingreso)
        minutos (obtener-minutos guar-hora-ingreso)
-       hora-fin (obtener-hora hora_final_atencion)
-       minutos-fin (obtener-minutos hora_final_atencion)
-       hora-ini (obtener-hora hora_inicio_atencion)
-       minutos-ini (obtener-minutos hora_inicio_atencion)]
-   [[guar-hist-clinica guar-fecha-ingreso guar-hora-ingreso diagnostico hora_final_atencion fecha_inicio_atencion]
+       hora-fin (obtener-hora hora-final-atencion)
+       minutos-fin (obtener-minutos hora-final-atencion)
+       hora-ini (obtener-hora hora-inicio-atencion)
+       minutos-ini (obtener-minutos hora-inicio-atencion)
+       cod-patol 9]
+   [[guar-hist-clinica guar-fecha-ingreso guar-hora-ingreso cod-patol hora-final-atencion fecha-inicio-atencion]
    [guar-hist-clinica 
     guar-fecha-ingreso 
     hora 
@@ -69,64 +71,74 @@
     0
     "N"
     0]
-   [histpactratam historia]]))
+   [histpactratam historia histpacmotivo diagnostico medico matricula]]))
 
 (defn guarda-texto-de-historia
-  [conn [numerador texto]]
-  (let [len (count texto)
-        textos (if (> len 77) 
-                 (->> (partition 77 77 [] texto)
-                      (map #(apply str %))) 
-                 [texto])
-        cantidad (count textos)
-        contador (atom 1)]
-    (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 0 0 "" cantidad]))
-    (doseq [text textos] 
-      (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 @contador @contador text 0]))
-      (swap! contador inc))))
-
+  ([conn numerador texto]
+   (guarda-texto-de-historia conn numerador texto nil nil))
+  ([conn numerador texto medico matricula]
+   (let [len (count texto)
+         textos (if (> len 77)
+                  (->> (partition-all 77 texto)
+                       (map #(apply str %)))
+                  [texto])
+         cantidad (count textos)
+         contador (atom 1)]
+     (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 0 0 "" cantidad]))
+     (doseq [text textos :let [t (if-not medico (str "Diagnostico: " text) text)]]
+       (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 @contador @contador t 0]))
+       (swap! contador inc))
+     (when medico
+       (ejecuta!
+        conn
+        (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) (str "Profesional: " medico " Matricula: " matricula) cantidad]))))))
+ 
 (defn crea-historia-clinica
-  "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
-  [db registro-guardia registro-historia-paciente registro-historia-texto]
-  (let [#_#_maestros (-> db :maestros)
-        #_#_desal (-> db :desal)
-        asistencial (-> db :asistencial)]
-    (future (ejecuta! asistencial (inserta-en-tbc-histpac registro-historia-paciente)))
-    (future (guarda-texto-de-historia asistencial registro-historia-texto))
-    (future (ejecuta! asistencial (actualiza-tbc-guardia registro-guardia)))))
+  "Persiste 4 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
+  [db registro-guardia registro-historia-paciente registro-historia-texto] 
+  (future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
+  (future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
+  (future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto)))
+  (future (ejecuta! db (actualiza-tbc-guardia registro-guardia))))
 
 (defn persiste-historia-clinica
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
   [db paciente]
-  (let [histpactratam (obtiene-numerador! db)
-        [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam))]
-    (crea-historia-clinica db guardia hc hc-texto)))
+  (let [histpactratam (obtiene-numerador! (:desal db))
+        histpacmotivo (obtiene-numerador! (:desal db))
+        [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))]
+    @(crea-historia-clinica (:asistencial db) guardia hc hc-texto)))
 
 (comment
+(let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+      desal (-> (system-repl/system) :donut.system/instances :conexiones :desal) 
+      req {:guar-hist-clinica 182222,
+           :patologia "H92",
+           :hora-inicio-atencion 112,
+           :medico "Amezqueta Marcela",
+           :guar-obra 1820,
+           :guar-plan "4000",
+           :matricula 123456,
+           :hc 182222,
+           :hora-final-atencion 343,
+           :guar-fecha-ingreso 20240808,
+           :diagnostico "Otalgia y secreción del oído",
+           :guar-nroben "",
+           :fecha-inicio-atencion 20240712,
+           :historia
+           "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
+           :nombre "John Doe",
+           :guar-hora-ingreso 1300,
+           :motivo "Fiebre / Sin otros síntomas mencionados"}
+      [_ reg] (prepara-registros req)]
+  (prepara-registros req)
+  #_@(future (ejecuta! asistencial (inserta-en-tbc-histpac reg)))
+  #_(persiste-historia-clinica {:asistencial asistencial
+                              :desal desal} req))
 
-  (let [m {:a 1
-           :z {:b 12 :c 332}}]
-    (merge (select-keys (:z m) [:c]) (select-keys m [:a])))
-
-(tap> (->> (partition 77 77 [] 
-                      "It’s important for programmers like you to learn concurrent and parallel programming techniques 
-               so you can design programs that run efficiently on modern hardware. Concurrency refers to a program’s 
-               ability to carry out more than one task, and in Clojure you achieve this by placing tasks on separate threads. 
-               Programs execute in parallel when a computer has more than one CPU, which allows more than one thread to be executed 
-               at the same time.
-               Concurrent programming refers to the techniques used to manage three concurrency risks: reference cells, mutual exclusion, 
-               and deadlock. Clojure gives you three basic tools that help you mitigate those risks: futures, delays, and promises. 
-               Each tool lets you decouple the three events of defining a task, executing a task, and requiring a task’s result. 
-               Futures let you define a task and execute it immediately, allowing you to require the result later or never. Futures also cache 
-               their results. Delays let you define a task that doesn’t get executed until later, and a delay’s result gets cached. Promises 
-               let you express that you require a result without having to know about the task that produces that result. You can only deliver 
-               a value to a promise once. ")
-           (map #(apply str %))
-           #_(map count)))
- 
-(partition 3 3 [] (range 1 11))
-
-(->> 1152 str (take 2) (apply str) (Integer/parseInt))
-(->> 1152 str (drop 2) (apply str) (Integer/parseInt))
+(let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+      registro [182222 20240808 1300 9 343 20240712]]
+  #_(actualiza-tbc-guardia registro)
+  (ejecuta! asistencial (actualiza-tbc-guardia registro)))
 
 :rcf)

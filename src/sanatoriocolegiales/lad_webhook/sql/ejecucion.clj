@@ -22,16 +22,16 @@
   [conn sentencia]
   (try
     (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-kebab-maps})
-    (catch SQLException e (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
+    (catch SQLException e (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e) :sentencia sentencia))))
 
 (defn obtiene-numerador!
   [db]
   (try
     (jdbc/with-transaction [conn db]
-      (->  (jdbc/execute! conn (obtener-numerador) {:builder-fn rs/as-unqualified-kebab-maps})
-           (then #(-> % first :contador_entero))
+      (->>  (jdbc/execute! conn (obtener-numerador) {:builder-fn rs/as-unqualified-kebab-maps})
+           (then #(-> % first :contador-entero))
            (then #(jdbc/execute! conn (actualiza-numerador %) {:builder-fn rs/as-unqualified-kebab-maps}))
-           (then #(-> % first :contador_entero))
+           (then #(-> % first :contador-entero))
            (else #(throw (ex-info "Hubo un problema al obtener el numerador" {:fecha (LocalDateTime/now)
                                                                               :message (ex-message %)})))))
     (catch SQLException e (mulog/log ::excepcion-transaccion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
@@ -44,11 +44,28 @@
   (def desal (-> (system-repl/system) :donut.system/instances :conexiones :desal))
   (def bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares))
   (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)) 
-    
-  (ejecuta! desal ["PRAGMA table_info(tbl_hist_txt)"])
+
+  (->> (jdbc/execute! desal (obtener-numerador) {:builder-fn rs/as-unqualified-kebab-maps})
+      (then #(-> % first :contador-entero)))
+  
+  (obtiene-numerador! desal)
+
+  (then #(-> % first :contador-entero) [{:contador-entero 0}])
+
+  (actualiza-numerador 10)
+
+  (ejecuta! asistencial ["PRAGMA table_info(tbc_histpac_txt)"]) 
   (ejecuta! asistencial ["PRAGMA table_info(tbc_histpac)"])
   (ejecuta! asistencial ["PRAGMA table_info(tbc_guardia)"])
-  
+   
+  (ejecuta! asistencial ["SELECT guar_fechaingreso, guar_horaingreso FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
+  (ejecuta! asistencial ["SELECT * FROM tbc_guardia"])
+  (ejecuta! asistencial ["DELETE FROM tbc_histpac"]) 
+  (ejecuta! asistencial ["SELECT * FROM tbc_histpac"]) 
+  (ejecuta! bases_auxiliares ["PRAGMA table_info(tbl_ladguardia_fallidos)"])
+  (ejecuta! bases_auxiliares ["DROP TABLE tbl_ladguardia_fallidos"])
+  (ejecuta! bases_auxiliares ["SELECT * FROM tbl_ladguardia_fallidos"])
+  (ejecuta! bases_auxiliares ["SELECT rowid, hc, fechaingreso, horaingreso FROM tbl_ladguardia_fallidos"])
   (ejecutar-todo! asistencial 
                   ["INSERT INTO tbc_guardia (
                     Guar_HistClinica,Guar_FechaIngreso, Guar_HoraIngreso, Guar_Especialidad, Guar_Estado, 
@@ -63,6 +80,8 @@
                     VALUES(180022, 20240808, 1430, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'MALUZSHKA MAHLO', 1820, '3000', '', 0, 0, 0, 0, 0, 0, 0, 0, 0, '',
                     0, 0, 0, 0, 0, 0, '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 0)"]
                   ["SELECT * FROM tbc_guardia"])
+  (ejecutar-todo! desal ["INSERT INTO tbl_parametros (paramid, contador_entero) VALUES (16, 0)"]
+                  ["SELECT * FROM tbl_parametros"])
    
 
    (if-let [paciente (seq (ejecuta! asistencial (sanatoriocolegiales.lad-webhook.sql.enunciados/selecciona-guardia 180022 20240808 1430)))]

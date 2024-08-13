@@ -6,7 +6,7 @@
  ;; ---------------------------------------------------------
  :deps
  {;; Service
-  http-kit/http-kit  {:mvn/version "2.8.0"}  
+  http-kit/http-kit  {:mvn/version "2.8.0"}
   metosin/reitit     {:mvn/version "0.7.1"}
   metosin/reitit-dev {:mvn/version "0.7.1"} ; human readable exceptions
 
@@ -36,6 +36,8 @@
   ;; Exception handling
   fmnoise/flow {:mvn/version "4.2.2"}
 
+  ;; Time
+  clojure.java-time/clojure.java-time {:mvn/version "1.4.2"}
   ;; System
   aero/aero           {:mvn/version "1.1.6"}
   party.donut/system  {:mvn/version "1.0.254"}
@@ -58,7 +60,7 @@
                      org.xerial/sqlite-jdbc {:mvn/version "3.46.0.0"}
                      com.github.flow-storm/clojure {:mvn/version "1.11.3-2"}
                      com.github.flow-storm/flow-storm-dbg {:mvn/version "3.17.1"}}
-        :classpath-overrides {org.clojure/clojure nil} 
+        :classpath-overrides {org.clojure/clojure nil}
         :jvm-opts ["-Dclojure.storm.instrumentEnable=true"
                    "-Dclojure.storm.instrumentOnlyPrefixes=sanatoriocolegiales.lad-webhook."]}
 
