@@ -26,10 +26,10 @@
                  :maestros (-> conf :db-type :relativity :maestros)
                  :bases_auxiliares (-> conf :db-type :postgres :bases_auxiliares)})
 
-(def conexiones2 {:desal {:jdbcUrl "jdbc:sqlite:desal.db"}
-                  :asistencial "jdbc:sqlite:asistencial.db"
-                  :maestros "jdbc:sqlite:maestros.db"
-                  :bases_auxiliares {:jdbcUrl "jdbc:sqlite:bases_auxiliares.db"}})
+(def conexiones2 {:desal {:jdbcUrl "jdbc:sqlite:dev-dbs/desal.db"}
+                  :asistencial "jdbc:sqlite:dev-dbs/asistencial.db"
+                  :maestros "jdbc:sqlite:dev-dbs/maestros.db"
+                  :bases_auxiliares {:jdbcUrl "jdbc:sqlite:dev-dbs/bases_auxiliares.db"}})
 
 
 ;; ---------------------------------------------------------
