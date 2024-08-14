@@ -3,7 +3,40 @@
                                                                     inserta-en-tbc-histpac-txt 
                                                                     actualiza-tbc-guardia]]
             [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]] 
-            [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora obtener-minutos]]))
+            [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora 
+                                                                             obtener-minutos
+                                                                             extraer-fecha-y-hora 
+                                                                             obtener-hora-finalizacion]]))
+
+(defn extraer-event-object
+  [{:keys [call_diagnosis
+           call_cie10
+           call_motive
+           call_doctor_comment
+           call_duration
+           call_start_datetime
+           order_id  ;; Acá recibiremos fecha y hora
+           doctor_name
+           doctor_enrollment_type
+           patient_name
+           patient_external_id ;; Acá recibimos el número de HC
+           ]}]
+  (let [[fecha hora] (extraer-fecha-y-hora order_id)
+        [fecha-ini hora-ini] (extraer-fecha-y-hora call_start_datetime)
+        hora-finalizacion (obtener-hora-finalizacion hora-ini call_duration)]
+    {:fecha fecha
+     :hora hora
+     :fecha-inicio-atencion fecha-ini
+     :hora-inicio-atencion hora-ini
+     :hora-final-atencion hora-finalizacion
+     :diagnostico call_diagnosis
+     :matricula (Integer/parseInt doctor_enrollment_type)
+     :medico doctor_name
+     :motivo call_motive
+     :historia call_doctor_comment
+     :nombre patient_name
+     :hc (Integer/parseInt patient_external_id)
+     :patologia call_cie10}))
 
 (defn prepara-registros
   "Adapta el mapa que viene del request y devuelve un vector con tres registros (también vectores) listos para ser persistidos"
@@ -108,6 +141,7 @@
         histpacmotivo (obtiene-numerador! (:desal db))
         [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))]
     @(crea-historia-clinica (:asistencial db) guardia hc hc-texto)))
+
 
 (comment
 (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)

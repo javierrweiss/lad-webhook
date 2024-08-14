@@ -59,11 +59,12 @@
   (ejecuta! asistencial ["PRAGMA table_info(tbc_guardia)"])
    
   (ejecuta! asistencial ["SELECT guar_fechaingreso, guar_horaingreso FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
-  (ejecuta! asistencial ["SELECT * FROM tbc_guardia"])
+  (tap> (ejecuta! asistencial ["SELECT * FROM tbc_guardia"]))
   (ejecuta! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
   (ejecuta! asistencial ["DELETE FROM tbc_histpac"]) 
+  (tap> (ejecuta! asistencial ["SELECT * FROM tbc_histpac"]))
   (ejecuta! asistencial ["SELECT * FROM tbc_histpac WHERE histpacnro = ? " 182222])
-  (ejecuta! asistencial ["SELECT * FROM tbc_histpac_txt"])
+  (tap> (ejecuta! asistencial ["SELECT * FROM tbc_histpac_txt"]))
   (ejecuta! bases_auxiliares ["PRAGMA table_info(tbl_ladguardia_fallidos)"])
   (ejecuta! bases_auxiliares ["DROP TABLE tbl_ladguardia_fallidos"])
   (ejecuta! bases_auxiliares ["SELECT * FROM tbl_ladguardia_fallidos"])
@@ -79,9 +80,10 @@
                     Guar_Ctro, Guar_Reingreso, Guar_FechaCama, Guar_HoraCama, Guar_FechaEpic, Guar_MenorAcom, 
                     Guar_OpeTipReingreso, Guar_OpeLegReingreso, Guar_OpeTipCama, Guar_OpeLegCama, 
                     Guar_EstadoFebril, Guar_QuienAnula, Guar_OtrCtro, GuarIva, GuarPresuFac, GuarNivel, GuarMedicab, GuarNropres) 
-                    VALUES(180022, 20240808, 1430, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'MALUZSHKA MAHLO', 1820, '3000', '', 0, 0, 0, 0, 0, 0, 0, 0, 0, '',
+                    VALUES(758922, 20240814, 1630, 4, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'JUANA DE ARCO', 1020, '1000', '', 0, 0, 0, 0, 0, 0, 0, 0, 0, '',
                     0, 0, 0, 0, 0, 0, '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 0)"]
                   ["SELECT * FROM tbc_guardia"])
+  
   (ejecutar-todo! desal ["INSERT INTO tbl_parametros (paramid, contador_entero) VALUES (16, 0)"]
                   ["SELECT * FROM tbl_parametros"])
    
