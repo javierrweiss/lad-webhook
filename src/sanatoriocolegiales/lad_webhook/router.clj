@@ -83,29 +83,19 @@
    (ring/router
     [;; --------------------------------------------------
      ;; All routing for service
-
      ;; OpenAPI Documentation routes
      open-api-docs
-
      ;; --------------------------------------------------
      ;; System routes & Status
      ;; - `/system-admin/status` for simple service healthcheck
      (system-admin/routes)
-
      ;; --------------------------------------------------
-     ;; sanatoriocolegiales lad-webhook API routes
-     ["/api"
-      ["/v1"
-       (atencion-guardia/routes system-config)]]]
-
-    ;; End of All routing for Guardia service
-    ;; --------------------------------------------------
-
+     ;; sanatoriocolegiales lad-webhook API routes 
+     (atencion-guardia/routes system-config)]
     ;; --------------------------------------------------
     ;; Router configuration
     ;; - middleware, coersion & content negotiation
     router-configuration)
-
    ;; --------------------------------------------------
    ;; Default routes
    (ring/routes

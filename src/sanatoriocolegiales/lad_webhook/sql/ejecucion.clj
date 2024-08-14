@@ -60,8 +60,10 @@
    
   (ejecuta! asistencial ["SELECT guar_fechaingreso, guar_horaingreso FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
   (ejecuta! asistencial ["SELECT * FROM tbc_guardia"])
+  (ejecuta! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
   (ejecuta! asistencial ["DELETE FROM tbc_histpac"]) 
-  (ejecuta! asistencial ["SELECT * FROM tbc_histpac"]) 
+  (ejecuta! asistencial ["SELECT * FROM tbc_histpac WHERE histpacnro = ? " 182222])
+  (ejecuta! asistencial ["SELECT * FROM tbc_histpac_txt"])
   (ejecuta! bases_auxiliares ["PRAGMA table_info(tbl_ladguardia_fallidos)"])
   (ejecuta! bases_auxiliares ["DROP TABLE tbl_ladguardia_fallidos"])
   (ejecuta! bases_auxiliares ["SELECT * FROM tbl_ladguardia_fallidos"])

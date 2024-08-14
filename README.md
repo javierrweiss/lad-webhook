@@ -9,7 +9,8 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
 ## TODOS
 
 [X] Está pendiente la definición de al menos una tabla que habría que agregar
-[ ] Faltaría la tabla de tbc_patologia
+[]  Hay que filtrar el tipo de evento
+[ ] ~~Faltaría la tabla de tbc_patologia~~
 [] Probar integración con testcontainers
 [] Verificar todos los campos que hay que actualizar en tbc_guardia
 [X] Implementar middleware para manejo de excepciones 
