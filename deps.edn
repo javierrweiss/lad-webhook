@@ -9,7 +9,6 @@
   http-kit/http-kit  {:mvn/version "2.8.0"}
   metosin/reitit     {:mvn/version "0.7.1"}
   metosin/reitit-dev {:mvn/version "0.7.1"} ; human readable exceptions
-
   ;; Logging
   ;; create events and send to publisher
   com.brunobonacci/mulog             {:mvn/version "0.9.0"}
@@ -17,25 +16,21 @@
   com.brunobonacci/mulog-adv-console {:mvn/version "0.9.0"}
   ;; Optional: suppress slf4j warning 
   org.slf4j/slf4j-nop {:mvn/version "1.7.32"}
-
   ;; Drivers
   RelJDBC/jar {:local/root "resources/RelJDBC.jar"}
   org.postgresql/postgresql {:mvn/version "42.7.3"}
   com.zaxxer/HikariCP {:mvn/version "5.1.0"}
-
   ;;SQL
   com.github.seancorfield/next.jdbc {:mvn/version "1.3.939"}
   com.github.seancorfield/honeysql {:mvn/version "2.6.1147"}
-
   ;; JSON
   cheshire/cheshire {:mvn/version "5.13.0"}
-
   ;; Crypto
   buddy/buddy-sign {:mvn/version "3.6.1-359"}
-
   ;; Exception handling
   fmnoise/flow {:mvn/version "4.2.2"}
-
+  ;; async
+  manifold/manifold {:mvn/version "0.4.3"}
   ;; Time
   clojure.java-time/clojure.java-time {:mvn/version "1.4.2"}
   ;; System

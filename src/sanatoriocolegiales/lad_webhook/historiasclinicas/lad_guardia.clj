@@ -1,12 +1,14 @@
 (ns sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia
-  (:require [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac 
-                                                                    inserta-en-tbc-histpac-txt 
-                                                                    actualiza-tbc-guardia]]
-            [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]] 
-            [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora 
-                                                                             obtener-minutos
-                                                                             extraer-fecha-y-hora 
-                                                                             obtener-hora-finalizacion]]))
+  (:require
+   [manifold.deferred :as d]
+   [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac
+                                                           inserta-en-tbc-histpac-txt
+                                                           actualiza-tbc-guardia]]
+   [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]]
+   [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora
+                                                                    obtener-minutos
+                                                                    extraer-fecha-y-hora
+                                                                    obtener-hora-finalizacion]]))
 
 (defn extraer-event-object
   [{:keys [call_diagnosis
@@ -128,51 +130,64 @@
  
 (defn crea-historia-clinica
   "Persiste 4 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
-  [db registro-guardia registro-historia-paciente registro-historia-texto] 
-  (future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
-  (future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
-  (future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto)))
-  (future (ejecuta! db (actualiza-tbc-guardia registro-guardia))))
+  [db registro-guardia registro-historia-paciente registro-historia-texto]
+  (d/zip
+   (d/future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
+   (d/future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
+   (d/future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto)))
+   (d/future (ejecuta! db (actualiza-tbc-guardia registro-guardia)))))
 
 (defn persiste-historia-clinica
-  "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
+  "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD.
+   Retorna un mapa con la llave id y el valor representa la hc del paciente"
   [db paciente]
-  (let [histpactratam (obtiene-numerador! (:desal db))
-        histpacmotivo (obtiene-numerador! (:desal db))
-        [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))]
-    @(crea-historia-clinica (:asistencial db) guardia hc hc-texto)))
+  @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
+               histpacmotivo (obtiene-numerador! (:desal db))
+               [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))] 
+        (crea-historia-clinica (:asistencial db) guardia hc hc-texto)
+         {:id (first hc)}))
 
 
 (comment
-(let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
-      desal (-> (system-repl/system) :donut.system/instances :conexiones :desal) 
-      req {:guar-hist-clinica 182222,
-           :patologia "H92",
-           :hora-inicio-atencion 112,
-           :medico "Amezqueta Marcela",
-           :guar-obra 1820,
-           :guar-plan "4000",
-           :matricula 123456,
-           :hc 182222,
-           :hora-final-atencion 343,
-           :guar-fecha-ingreso 20240808,
-           :diagnostico "Otalgia y secreción del oído",
-           :guar-nroben "",
-           :fecha-inicio-atencion 20240712,
-           :historia
-           "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
-           :nombre "John Doe",
-           :guar-hora-ingreso 1300,
-           :motivo "Fiebre / Sin otros síntomas mencionados"}
-      [_ reg] (prepara-registros req)]
-  (prepara-registros req)
-  #_@(future (ejecuta! asistencial (inserta-en-tbc-histpac reg)))
-  #_(persiste-historia-clinica {:asistencial asistencial
-                              :desal desal} req))
+  (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+        desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)
+        req {:guar-hist-clinica 182222,
+             :patologia "H92",
+             :hora-inicio-atencion 112,
+             :medico "Amezqueta Marcela",
+             :guar-obra 1820,
+             :guar-plan "4000",
+             :matricula 123456,
+             :hc 182222,
+             :hora-final-atencion 343,
+             :guar-fecha-ingreso 20240808,
+             :diagnostico "Otalgia y secreción del oído",
+             :guar-nroben "",
+             :fecha-inicio-atencion 20240712,
+             :historia
+             "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
+             :nombre "John Doe",
+             :guar-hora-ingreso 1300,
+             :motivo "Fiebre / Sin otros síntomas mencionados"}
+        [_ reg] (prepara-registros req)]
+    (prepara-registros req)
+    #_@(future (ejecuta! asistencial (inserta-en-tbc-histpac reg)))
+    #_(persiste-historia-clinica {:asistencial asistencial
+                                  :desal desal} req))
 
-(let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
-      registro [182222 20240808 1300 9 343 20240712]]
-  #_(actualiza-tbc-guardia registro)
-  (ejecuta! asistencial (actualiza-tbc-guardia registro)))
+  (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+        registro [182222 20240808 1300 9 343 20240712]]
+    #_(actualiza-tbc-guardia registro)
+    (ejecuta! asistencial (actualiza-tbc-guardia registro)))
 
-:rcf)
+  (d/let-flow [a (do (Thread/sleep 1000)
+                     1)
+               b (do (Thread/sleep 2000) 2)
+               c (+ a b)]
+              (d/future (* 10 c)))
+  @(d/let-flow [a (do (Thread/sleep 1000)
+                      1)
+                b (do (Thread/sleep 2000) 2)]
+               (d/future (+ a b)))
+
+  :rcf)
