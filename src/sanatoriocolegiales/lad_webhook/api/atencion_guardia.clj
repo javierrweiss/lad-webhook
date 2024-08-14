@@ -1,20 +1,24 @@
 (ns sanatoriocolegiales.lad-webhook.api.atencion-guardia
   "Atenciones de teleconsulta en guardia con servicio LAD"
   (:require 
-   [ring.util.response :refer [created]]
+   [ring.util.response :refer [created response]]
    [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [persiste-historia-clinica]]
    [fmnoise.flow :as flow :refer [then]]
    [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request]]))
 
-(defn procesar-atencion
-  "Handler para las atenciones. 
-   Recibe el request `req` y el estado del sistema `sys`"
-  [{:keys [body-params]} sys] 
-  (->> (valida-request body-params)
-       (then #(valida-paciente sys %))
+(defn procesa-atencion 
+  [request sys] 
+  (->> (valida-paciente sys request)
        (then #(persiste-historia-clinica sys %)) 
-       (created "/"))) ;;Debería pasar en la respuesta el id de paciente
+       (created "/"))) 
  
+(defn procesa-eventos
+  [{:keys [event_type] :as req} sys] 
+  (case event_type
+    "CALL_ENDED" (procesa-atencion req sys)
+      (-> (response "Recibido") 
+          (assoc :headers {"Content-Type" "text/plain"}))))
+     
 (defn routes
   "Reitit route configuration"
   [system-config]
@@ -25,13 +29,11 @@
            :parameters {:body {:datetime string?
                                :event_type string?
                                :event_object map?}}
-           :handler #(procesar-atencion % system-config)}}])
+           :handler #(-> (valida-request %) 
+                         (procesa-eventos system-config))}}])
  
 
 (comment
-
-  (procesar-atencion {:body-params {:a 12 
-                                    :b 334}} 
-                     {})
+  
 
   )

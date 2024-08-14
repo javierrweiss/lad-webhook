@@ -5,9 +5,9 @@
             [clojure.java.io :as io]))
 
 (defn valida-request
-  [req-body] 
-  (if req-body
-    req-body
+  [req] 
+  (if req
+    (:body-params req)
     (throw (ex-info "Solicitud no autorizada" {:type :sanatoriocolegiales.lad-webhook.error.error/no-autorizada})))) 
 
 (defn valida-paciente
@@ -59,8 +59,8 @@
 
 (comment
   
-  (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string))
-
+  (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string)) 
+ 
   (let [conexiones {:asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
                     :bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares)}]
     (valida-paciente conexiones request))
