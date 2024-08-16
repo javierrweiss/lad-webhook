@@ -1,12 +1,16 @@
 (ns sanatoriocolegiales.lad-webhook.seguridad.validacion
   (:require [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta!]]
+            [sanatoriocolegiales.lad-webhook.seguridad.autorizacion :refer [autenticar-y-autorizar-solicitud]]
             [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [selecciona-guardia inserta-en-tbl-ladguardia-fallidos]]
             [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [extraer-event-object]] 
-            [clojure.java.io :as io]))
+            [clojure.java.io :as io]
+            [com.brunobonacci.mulog :as mulog])
+  (:import java.time.LocalDateTime))
 
 (defn valida-request
-  [req] 
-  (if req
+  [req]
+  (mulog/log ::validar-request :fecha (LocalDateTime/now))
+  (if (autenticar-y-autorizar-solicitud req)
     (:body-params req)
     (throw (ex-info "Solicitud no autorizada" {:type :sanatoriocolegiales.lad-webhook.error.error/no-autorizada})))) 
 
@@ -14,6 +18,7 @@
   "Si tiene éxito devuelve un mapa con el registro del paciente, la fecha, la hora y la información necesaria del request.
    Arroja excepción si la validación no es exitosa y escribe los datos en una tabla auxiliar"
   [{:keys [asistencial bases_auxiliares]} {:keys [event_object]}]
+  (mulog/log ::validar-paciente :fecha (LocalDateTime/now) :paciente (:patient_external_id event_object)) 
   (let [{:keys [hc
                 fecha
                 hora

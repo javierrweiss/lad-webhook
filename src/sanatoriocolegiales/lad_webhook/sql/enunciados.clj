@@ -2,8 +2,7 @@
   (:require [honey.sql :as sql]))
 
 (defn inserta-en-tbc-histpac
-  [values]
-  (tap> (str "Insertando en tbc_histpac " (values 1) (values 2) (values 3)))
+  [values] 
   (sql/format {:insert-into :tbc_histpac
                :columns [:histpacnro ;; hc
                          :histpacfec ;; fecha ingreso tbc_guardia

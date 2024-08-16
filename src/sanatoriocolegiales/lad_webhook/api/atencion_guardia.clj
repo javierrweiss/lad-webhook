@@ -26,7 +26,9 @@
    {:swagger {:tags ["Atenciones de Guardia con servicio LAD"]}
     :post {:summary "Atenciones de teleconsulta en guardia con servicio LAD"
            :description "Procesa las atenciones y genera/actualiza la historia clínica del paciente"
-           :parameters {:body {:datetime string?
+           :parameters {:query-string {:client_id string?
+                                       :client_secret string?}
+                        :body {:datetime string?
                                :event_type string?
                                :event_object map?}}
            :handler #(-> (valida-request %) 
@@ -35,5 +37,7 @@
 
 (comment
   
-(created "/" {:id 233})
+(created "/" {:id 233}) 
+  (-> (ring.util.response/response "Bien")
+      (ring.util.response/content-type "text/plain"))
   )

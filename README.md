@@ -1,5 +1,7 @@
 # sanatoriocolegiales/lad-webhook
 
+Servicio que consume webhook de LAD para procesamiento de historias clínicas realizadas a través de teleconsulta por guardia.
+
 ## Project Status
 
 WIP
@@ -9,13 +11,13 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
 ## TODOS
 
 [X] Está pendiente la definición de al menos una tabla que habría que agregar
-[]  Hay que filtrar el tipo de evento
+[X]  Hay que filtrar el tipo de evento
 [ ] ~~Faltaría la tabla de tbc_patologia~~
 [] Probar integración con testcontainers
 [] Verificar todos los campos que hay que actualizar en tbc_guardia
 [X] Implementar middleware para manejo de excepciones 
-[] Implementar autenticación por JWT
-[] Implementar tests para autenticación y generación de registros
+[X] ~~Implementar autenticación por JWT~~ Autenticación tipo OAUTH2
+[] Implementar tests para generación de registros
 [X] Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
 [X] Corregir problema de conexión con SQLite usando Hikari
 
