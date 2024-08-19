@@ -13,7 +13,8 @@
   (exception/create-exception-middleware 
    (merge 
     exception/default-handlers
-    {SQLException (partial handler (status {:body "Hubo un error con la base de datos"} 500)) 
+    {SQLException (partial handler (status {:body "Hubo un error con la base de datos"} 500))
+     ::excepcion-sql (partial handler (status {:body "Hubo un error con la base de datos"} 500))
      ::no-autorizada (partial handler (status {:body "Solicitud no autorizada"} 401))
      ::recurso-no-encontrado (partial handler (status {:body "No se encontró el paciente"} 404))
      ::exception/wrap (fn [handler e request]

@@ -7,6 +7,8 @@
             [com.brunobonacci.mulog :as mulog])
   (:import java.time.LocalDateTime))
 
+(def historia-clinica-actual (atom 0))
+
 (defn valida-request
   [req env]
   (mulog/log ::validar-request :fecha (LocalDateTime/now))
@@ -29,7 +31,8 @@
                 motivo]
          :as request-info} (extraer-event-object event_object)]
     (if-let [paciente (->> (selecciona-guardia hc fecha hora) (ejecuta! asistencial) seq)]
-      (merge (first paciente) request-info)
+      (do (reset! historia-clinica-actual hc)
+          (merge (first paciente) request-info))
       (do
         (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [hc
                                                                         fecha
