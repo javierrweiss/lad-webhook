@@ -16,13 +16,17 @@
     `(jdbc/with-transaction [conn# ~conn]
        ~@(for [sentencia sentencias]
            `(jdbc/execute! ~conn ~sentencia {:builder-fn rs/as-unqualified-kebab-maps})))
-    (catch SQLException e (mulog/log ::excepcion-transaccion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
+    (catch SQLException e (do 
+                            (mulog/log ::excepcion-transaccion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e))
+                            (throw e)))))
      
 (defn ejecuta!
   [conn sentencia]
   (try
     (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-kebab-maps})
-    (catch SQLException e (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e) :sentencia sentencia))))
+    (catch SQLException e (do 
+                            (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e) :sentencia sentencia)
+                            (throw e)))))
 
 (defn obtiene-numerador!
   [db]
@@ -34,13 +38,15 @@
            (then #(-> % first :contador-entero))
            (else #(throw (ex-info "Hubo un problema al obtener el numerador" {:fecha (LocalDateTime/now)
                                                                               :message (ex-message %)})))))
-    (catch SQLException e (mulog/log ::excepcion-transaccion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
+    (catch SQLException e (do 
+                            (mulog/log ::excepcion-transaccion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e))
+                            (throw e)))))
     
 (comment  
   (macroexpand '(ejecutar-todo! desal ["SELECT * FROM tbl_eventlog_cirugia"] ["SELECT * FROM tbl_eventlog_cirugia"] ["SELECT * FROM tbl_eventlog_cirugia"]))
    
   (ejecutar-todo! desal ["SELECT * FROM tbl_eventlog_cirugia"] ["SELECT * FROM tbl_eventlog_cirugia"] ["SELECT * FROM tbl_eventlog_cirugia"])
-  
+   
   (def desal (-> (system-repl/system) :donut.system/instances :conexiones :desal))
   (def bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares))
   (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)) 
@@ -53,7 +59,7 @@
   (then #(-> % first :contador-entero) [{:contador-entero 0}])
 
   (actualiza-numerador 10)
-
+(ejecuta! asistencial ["PRAGMAF table_info(tbc_histpac_txt)"])
   (ejecuta! asistencial ["PRAGMA table_info(tbc_histpac_txt)"]) 
   (ejecuta! asistencial ["PRAGMA table_info(tbc_histpac)"])
   (ejecuta! asistencial ["PRAGMA table_info(tbc_guardia)"])

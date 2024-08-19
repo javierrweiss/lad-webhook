@@ -102,10 +102,10 @@
   (add-libs '{domain/library-name {:mvn/version "1.0.0"}})
            
   (restart)
-  (stop)     
+  (stop)      
   (start) 
-         
-      
+                
+       
   (tap> (:donut.system/instances (system))) 
   #'system
   ((-> (system) :donut.system/instances :http :handler))
@@ -154,10 +154,7 @@
 ;; ---------------------------------------------------------
 
 (comment
-  (require '[org.httpkit.client :as http]
-           '[clojure.edn :as edn]
-           '[clojure.java.io :as io]
-           '[cheshire.core :as json])
+  (require '[org.httpkit.client :as http])
   (def post-resource (-> (io/resource "payload_model.edn")
                          slurp
                          edn/read-string))

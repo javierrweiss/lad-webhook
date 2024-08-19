@@ -10,26 +10,17 @@
    [donut.system :as donut]
    [donut.system.repl :as donut-repl]
    [donut.system.repl.state :as donut-repl-state]
-   [sanatoriocolegiales.lad-webhook.system :as system]
-   [aero.core :refer [read-config]]
-   [clojure.java.io :as io]
+   [sanatoriocolegiales.lad-webhook.system :as system] 
    [sql-auxiliar :refer [crear-tabla-tbc-hist-pac 
                          crear-tabla-tbc-guardia 
                          crear-tabla-tbc-histpac-txt
                          crear-tabla-tbl-ladguardia-fallidos
                          crear-tabla-tbl-parametros]]))
 
-(def conf (read-config (io/resource "config.edn") {:profile :dev}))
-
-(def conexiones {:desal (-> conf :db-type :postgres :desal)
-                 :asistencial (-> conf :db-type :relativity :asistencial)
-                 :maestros (-> conf :db-type :relativity :maestros)
-                 :bases_auxiliares (-> conf :db-type :postgres :bases_auxiliares)})
-
-(def conexiones2 {:desal {:jdbcUrl "jdbc:sqlite:dev-dbs/desal.db"}
-                  :asistencial "jdbc:sqlite:dev-dbs/asistencial.db"
-                  :maestros "jdbc:sqlite:dev-dbs/maestros.db"
-                  :bases_auxiliares {:jdbcUrl "jdbc:sqlite:dev-dbs/bases_auxiliares.db"}})
+(def conexiones {:desal {:jdbcUrl "jdbc:sqlite:dev-dbs/desal.db"}
+                 :asistencial "jdbc:sqlite:dev-dbs/asistencial.db"
+                 :maestros "jdbc:sqlite:dev-dbs/maestros.db"
+                 :bases_auxiliares {:jdbcUrl "jdbc:sqlite:dev-dbs/bases_auxiliares.db"}})
 
 
 ;; ---------------------------------------------------------
@@ -43,24 +34,26 @@
 ;; to support the development workflow
 (defmethod donut/named-system :dev
   [_] (donut/system :donut.system/repl
-                    {[:env :app-env] "dev"
+                    {[:env :app-env] :dev
                      [:env :app-version] "0.0.0-SNAPSHOT"
                      [:services :http-server ::donut/config :options :join?] false
-                     [:env :persistence] conexiones2
+                     [:conexiones :maestros ::donut/config] {:specs (:maestros conexiones)}
                      [:conexiones :maestros ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                   (println "Ejecutando post-start maestros..."))
+                     [:conexiones :desal ::donut/config] {:specs (:desal conexiones)}
                      [:conexiones :desal ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                (println "Ejecutando post-start desal...")
                                                                (crear-tabla-tbl-parametros specs))
+                     [:conexiones :asistencial ::donut/config] {:specs (:asistencial conexiones)}
                      [:conexiones :asistencial ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                      (println "Ejecutando post-start asistencial...")
                                                                      (crear-tabla-tbc-guardia specs)
                                                                      (crear-tabla-tbc-hist-pac specs)
                                                                      (crear-tabla-tbc-histpac-txt specs))
+                     [:conexiones :bases_auxiliares ::donut/config] {:specs (:bases_auxiliares conexiones)}
                      [:conexiones :bases_auxiliares ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                           (println "Ejecutando post-start bases auxiliares")
                                                                           (crear-tabla-tbl-ladguardia-fallidos specs))
-                     [:env :http-port] (:service-port conf)
                      [:services :event-log-publisher ::donut/config]
                      {:publisher {:type :console :pretty? true}}}))
 ;; ---------------------------------------------------------
@@ -91,6 +84,7 @@
 
 
 (comment
-  (donut/system :dev {[:env :persistence] conexiones2})
-   (donut/signal (donut/system :dev) ::donut/post-start)
+  (donut/system :dev)
+   (donut/signal (donut/system :dev) ::donut/start)
+  (donut/start :dev {} [:env]) 
   ) 

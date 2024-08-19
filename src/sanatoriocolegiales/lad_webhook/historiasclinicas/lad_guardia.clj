@@ -8,7 +8,9 @@
    [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora
                                                                     obtener-minutos
                                                                     extraer-fecha-y-hora
-                                                                    obtener-hora-finalizacion]]))
+                                                                    obtener-hora-finalizacion]])
+  (:import java.io.IOException
+           java.sql.SQLException))
 
 (defn extraer-event-object
   [{:keys [call_diagnosis
@@ -131,25 +133,31 @@
 (defn crea-historia-clinica
   "Persiste 4 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
   [db registro-guardia registro-historia-paciente registro-historia-texto]
-  (d/zip
-   (d/future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
-   (d/future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
-   (d/future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto)))
-   (d/future (ejecuta! db (actualiza-tbc-guardia registro-guardia)))))
+  (try
+    (d/zip
+     (d/future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
+     (d/future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
+     (d/future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto)))
+     (d/future (ejecuta! db (actualiza-tbc-guardia registro-guardia))))
+    (catch SQLException e (throw e))
+    (catch IOException e (throw e))))
 
 (defn persiste-historia-clinica
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD.
    Retorna un mapa con la llave id y el valor representa la hc del paciente"
   [db paciente]
-  @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
-               histpacmotivo (obtiene-numerador! (:desal db))
-               [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))] 
-        (crea-historia-clinica (:asistencial db) guardia hc hc-texto)
-         {:id (first hc)}))
+  (try
+    @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
+                  histpacmotivo (obtiene-numerador! (:desal db))
+                  [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))] 
+                 (crea-historia-clinica (:asistencial db) guardia hc hc-texto)
+                 {:id (first hc)})
+    (catch SQLException e (throw e))
+    (catch IOException e (throw e)))) 
 
 
 (comment
-  (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+  #_(let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)
         req {:guar-hist-clinica 182222,
              :patologia "H92",
@@ -189,5 +197,11 @@
                       1)
                 b (do (Thread/sleep 2000) 2)]
                (d/future (+ a b)))
+  
+  @(d/let-flow [a (do (Thread/sleep 2000) 2)]
+               (+ a (d/zip
+                     (d/future (inc 20))
+                     (d/future (throw (ex-info "Upps!" {})))
+                     (d/future (inc 23)))))
 
   :rcf)

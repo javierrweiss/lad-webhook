@@ -31,8 +31,8 @@
                         :body {:datetime string?
                                :event_type string?
                                :event_object map?}}
-           :handler #(-> (valida-request %) 
-                         (procesa-eventos system-config))}}])
+           :handler #(-> (valida-request % (:env system-config))
+                      (procesa-eventos system-config))}}])
  
 
 (comment

@@ -29,20 +29,16 @@
 ;; ---------------------------------------------------------
 ;; Donut Party System configuration
 
-(def conf (read-config (io/resource "config.edn") {:profile :prod}))
-
 (def main
   "System Component management with Donut"
   {::donut/defs
    {:env
     {:app-version "0.1.0"
-     :app-env "prod"
-     :http-port (:service-port conf)
-     :persistence
-     {:desal (-> conf :db-type :postgres :desal)
-      :asistencial (-> conf :db-type :relativity :asistencial)
-      :maestros (-> conf :db-type :relativity :maestros)
-      :bases_auxiliares (-> conf :db-type :postgres :bases_auxiliares)}}
+     :app-env :prod
+     :env-conf #::donut{:start (fn cargar-configuracion
+                                 [{{:keys [perfil]} ::donut/config}] 
+                                 (read-config (io/resource "config.edn") {:profile perfil}))
+                        :config {:perfil (donut/local-ref [:app-env])}}}
     :event-log
     {:publisher
      #::donut{:start (fn mulog-publisher-start
@@ -78,7 +74,7 @@
                                 [{::donut/keys [instance]}]
                                 (cerrar instance))
                
-                        :config {:specs (donut/ref [:env :persistence :maestros])}}
+                        :config {:specs (donut/ref [:env :env-conf :db-type :relativity :maestros])}}
      :desal #::donut{:start (fn iniciar-conexion
                               [{{:keys [specs]} ::donut/config}]
                               (crear-connection-pool specs))
@@ -87,7 +83,7 @@
                              [{::donut/keys [instance]}]
                              (cerrar instance))
             
-                     :config {:specs (donut/ref [:env :persistence :desal])}}
+                     :config {:specs (donut/ref [:env :env-conf :db-type :postgres :desal])}}
      :asistencial #::donut{:start (fn iniciar-conexion
                                     [{{:keys [specs]} ::donut/config}]
                                     (crear-conexion-simple specs))
@@ -96,14 +92,14 @@
                                    [{::donut/keys [instance]}]
                                    (cerrar instance))
                   
-                           :config {:specs (donut/ref [:env :persistence :asistencial])}}
+                           :config {:specs (donut/ref [:env :env-conf :db-type :relativity :asistencial])}}
      :bases_auxiliares #::donut{:start (fn iniciar-conexion
                                          [{{:keys [specs]} ::donut/config}]
                                          (crear-connection-pool specs))
                                 :stop (fn detener-conexion
                                         [{::donut/keys [instance]}]
                                         (cerrar instance))
-                                :config {:specs (donut/ref [:env :persistence :bases_auxiliares])}}
+                                :config {:specs (donut/ref [:env :env-conf :db-type :postgres :bases_auxiliares])}}
     }
     ;; HTTP server start - returns function to stop the server
     :http
@@ -112,7 +108,7 @@
                        [{{:keys [handler options]} ::donut/config}]
                        (mulog/log ::http-server-component
                                   :handler handler
-                                  :port (options :port)
+                                  :port (-> options :port)
                                   :local-time (java.time.LocalDateTime/now))
                        (http-server/run-server handler options))
 
@@ -124,12 +120,13 @@
                        (instance))
 
               :config {:handler (donut/local-ref [:handler])
-                       :options {:port  (donut/ref [:env :http-port])
+                       :options {:port  (donut/ref [:env :env-conf :service-port])
                                  :join? true}}}
      
      :handler #::donut{:start (fn call-handler 
-                                [{{:keys [db]} ::donut/config}] 
-                                (router/app db))
-                       :config {:db (donut/ref [:conexiones])}}}}})
+                                [{{:keys [db env]} ::donut/config}] 
+                                (router/app (assoc db :env env)))
+                       :config {:db (donut/ref [:conexiones])
+                                :env (donut/ref [:env :app-env])}}}}})
  
- 
+  
