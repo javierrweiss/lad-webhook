@@ -2,16 +2,16 @@
   "Atenciones de teleconsulta en guardia con servicio LAD"
   (:require 
    [ring.util.response :refer [created response]]
-   [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [persiste-historia-clinica]]
+   [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [ingresar-historia-a-sistema]]
    [fmnoise.flow :as flow :refer [then]]
    [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request]]))
 
 (defn procesa-atencion 
   [request sys] 
   (->> (valida-paciente sys request)
-       (then #(persiste-historia-clinica sys %)) 
+       (then #(ingresar-historia-a-sistema sys %))  
        (created "/"))) 
- 
+  
 (defn procesa-eventos
   [{:keys [event_type] :as req} sys] 
   (case event_type

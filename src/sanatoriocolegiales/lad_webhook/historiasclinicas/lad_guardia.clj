@@ -8,7 +8,8 @@
    [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora
                                                                     obtener-minutos
                                                                     extraer-fecha-y-hora
-                                                                    obtener-hora-finalizacion]]))
+                                                                    obtener-hora-finalizacion]]
+   [com.brunobonacci.mulog :as mulog]))
 
 (defn extraer-event-object
   [{:keys [call_diagnosis
@@ -141,14 +142,18 @@
 
 (defn persiste-historia-clinica!
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
-  [db paciente] 
-  @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
-                histpacmotivo (obtiene-numerador! (:desal db))
-                [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))]
-               (-> (crea-historia-clinica! (:asistencial db) guardia hc hc-texto)
-                   (d/catch Exception #(throw %))))) 
+  [db paciente]
+   @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
+                       histpacmotivo (obtiene-numerador! (:desal db))
+                       [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))]
+                      (-> (crea-historia-clinica! (:asistencial db) guardia hc hc-texto)
+                          (d/catch Exception #(throw %))))) 
    
-
+(defn ingresar-historia-a-sistema
+  [db paciente]
+  (when (persiste-historia-clinica! db paciente)
+    {:id (:guar-hist-clinica paciente)}))
+ 
 (comment
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)
@@ -174,7 +179,7 @@
     #_(prepara-registros req) 
     (persiste-historia-clinica! {:asistencial asistencial
                                   :desal desal} req)
-    #_@(apply crea-historia-clinica! asistencial registros))
+    #_@(apply crea-historia-clinica! asistencial registros)) 
        
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         registro [182222 20240808 1300 9 343 20240712]]
@@ -196,5 +201,8 @@
                      (d/future (inc 20))
                      (d/future (throw (ex-info "Upps!" {})))
                      (d/future (inc 23)))))
+  
+  (when (throw (ex-info "excepcion boluda" {}))
+    1)
 
   :rcf)
