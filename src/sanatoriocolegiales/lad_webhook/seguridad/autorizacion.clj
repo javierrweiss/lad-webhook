@@ -12,4 +12,4 @@
         passwd   (:client-secret conf)]
     (when (and (= cliente client_id) (= passwd client_secret))
       true)))
-
+ 

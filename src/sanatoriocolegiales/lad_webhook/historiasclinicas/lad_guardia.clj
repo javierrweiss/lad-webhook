@@ -9,7 +9,9 @@
                                                                     obtener-minutos
                                                                     extraer-fecha-y-hora
                                                                     obtener-hora-finalizacion]]
-   [com.brunobonacci.mulog :as mulog]))
+   [hyperfiddle.rcf :refer [tests]]
+   [clojure.edn :as edn]
+   [clojure.java.io :as io]))
 
 (defn extraer-event-object
   [{:keys [call_diagnosis
@@ -153,7 +155,30 @@
   [db paciente]
   (when (persiste-historia-clinica! db paciente)
     {:id (:guar-hist-clinica paciente)}))
- 
+
+
+(tests
+
+ (def event-object (-> (io/resource "payload_model.edn")
+                       slurp
+                       edn/read-string
+                       :event_object))
+
+ (let [obj (extraer-event-object event-object)]
+   (number? (:fecha obj)) := true
+   (number? (:hora obj)) := true
+   (number? (:fecha-inicio-atencion obj)) := true
+   (number? (:hora-inicio-atencion obj)) := true
+   (number? (:hora-final-atencion obj)) := true
+   (string? (:diagnostico obj)) := true
+   (number? (:matricula obj)) := true
+   (string? (:medico obj)) := true
+   (string? (:motivo obj)) := true
+   (string? (:historia obj)) := true
+   (string? (:nombre obj)) := true
+   (number? (:hc obj)) := true
+   (string? (:patologia obj)) := true))
+  
 (comment
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)

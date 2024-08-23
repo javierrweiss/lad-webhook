@@ -4,7 +4,10 @@
             [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [selecciona-guardia inserta-en-tbl-ladguardia-fallidos]]
             [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [extraer-event-object]] 
             [clojure.java.io :as io]
-            [com.brunobonacci.mulog :as mulog])
+            [com.brunobonacci.mulog :as mulog]
+            [hyperfiddle.rcf :refer [tests]]
+            [clojure.edn :as edn]
+            [ring.mock.request :as mock])
   (:import java.time.LocalDateTime))
 
 (defn valida-request
@@ -43,6 +46,24 @@
                                                   :fecha fecha
                                                   :hora hora
                                                   :hc hc}))))))
+
+
+(tests
+ 
+ (def payload (-> (io/resource "payload_model.edn") slurp edn/read-string))
+ (def request-correcto (-> (mock/request :post "/lad/historia_clinica_guardia")
+                           (assoc :body-params payload)))
+ (def resultado-req-correcto (:body-params request-correcto))
+ 
+ "Validación de request devuelve body-params cuando credenciales son correctas"
+ (with-redefs-fn {#'autenticar-y-autorizar-solicitud (constantly true)} 
+   #(valida-request request-correcto :dev)) := resultado-req-correcto 
+
+ "Validación de request lanza excepción cuando credenciales son incorrectas"
+ (with-redefs-fn {#'autenticar-y-autorizar-solicitud (constantly nil)}
+   #(valida-request request-correcto :dev)) :throws clojure.lang.ExceptionInfo
+ )    
+
 
 (comment
   
