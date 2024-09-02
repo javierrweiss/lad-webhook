@@ -4,7 +4,7 @@
    [ring.util.response :refer [created response]]
    [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [ingresar-historia-a-sistema]]
    [fmnoise.flow :as flow :refer [then]]
-   [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request]]))
+   [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request valida-event-object]]))
 
 (defn procesa-atencion 
   [request sys] 
@@ -18,6 +18,12 @@
     "CALL_ENDED" (procesa-atencion req sys)
       (-> (response "Recibido") 
           (assoc :headers {"Content-Type" "text/plain"}))))
+
+(defn handler
+  [conf req]
+  (-> (valida-request req (:env conf))
+      valida-event-object
+      (procesa-eventos conf)))
      
 (defn routes
   "Reitit route configuration"
@@ -31,8 +37,7 @@
                         :body {:datetime string?
                                :event_type string?
                                :event_object map?}}
-           :handler #(-> (valida-request % (:env system-config))
-                      (procesa-eventos system-config))}}])
+           :handler (partial handler system-config)}}])
  
 
 (comment
