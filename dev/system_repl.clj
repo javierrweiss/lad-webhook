@@ -1,9 +1,3 @@
-;; ---------------------------------------------------------
-;; Donut System REPL
-;;
-;; Tools for REPl workflow with Donut system components
-;; ---------------------------------------------------------
-
 (ns system-repl
   "Tools for REPl workflow with Donut system components"
   (:require

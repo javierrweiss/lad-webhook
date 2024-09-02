@@ -1,5 +1,3 @@
-CREATE DATABASE asistencial;
-USE asistencial;
 CREATE TABLE tbc_histpac (
 	HistpacNro DECIMAL(10,0) NOT NULL,
 	HistpacFec INTEGER NOT NULL,
@@ -43,9 +41,9 @@ CREATE TABLE tbc_histpac (
 	HistpacCancd INTEGER,
 	CONSTRAINT X_1_2_3_4_5_6 PRIMARY KEY (HistpacNro,HistpacFec,HistpacH,HistpacM,HistpacR,HistpacE)
 );
-CREATE INDEX X_7_8_9 ON Asistencial.tbc_histpac (HistpacEspfir,HistpacNro1,HistpacFec1);
-CREATE INDEX X_8_9 ON Asistencial.tbc_histpac (HistpacNro1,HistpacFec1);
-CREATE INDEX X_A_B ON Asistencial.tbc_histpac (HistpacNro2,HistpacEspfir1);
+CREATE INDEX X_7_8_9 ON tbc_histpac (HistpacEspfir,HistpacNro1,HistpacFec1);
+CREATE INDEX X_8_9 ON tbc_histpac (HistpacNro1,HistpacFec1);
+CREATE INDEX X_A_B ON tbc_histpac (HistpacNro2,HistpacEspfir1);
 
 CREATE TABLE tbc_guardia (
 	Guar_HistClinica DECIMAL(10,0) NOT NULL,
@@ -105,12 +103,10 @@ CREATE TABLE tbc_guardia (
 	GuarNropres INTEGER,
 	CONSTRAINT X_1_2_3 PRIMARY KEY (Guar_HistClinica,Guar_FechaIngreso,Guar_HoraIngreso)
 );
-CREATE INDEX X_4_5_6_7 ON Asistencial.tbc_guardia (Guar_Especialidad,Guar_Estado,Guar_FechaIngreso1,Guar_HoraIngreso1);
-CREATE INDEX X_8_9_A ON Asistencial.tbc_guardia (Guar_HistClinica1,Guar_Especialidad1,Guar_Estado1);
-CREATE INDEX X_B_C_D_E ON Asistencial.tbc_guardia (Guar_FechaIngreso3,Guar_HoraIngreso3,Guar_Especialidad3,Guar_Estado3);
+CREATE INDEX X_4_5_6_7 ON tbc_guardia (Guar_Especialidad,Guar_Estado,Guar_FechaIngreso1,Guar_HoraIngreso1);
+CREATE INDEX X_8_9_A ON tbc_guardia (Guar_HistClinica1,Guar_Especialidad1,Guar_Estado1);
+CREATE INDEX X_B_C_D_E ON tbc_guardia (Guar_FechaIngreso3,Guar_HoraIngreso3,Guar_Especialidad3,Guar_Estado3);
 
-CREATE DATABASE desal;
-USE desal;
 CREATE TABLE tbl_hist_txt (
 	ht_histclin numeric(10) NOT NULL,
 	ht_fecha numeric(8) NOT NULL,

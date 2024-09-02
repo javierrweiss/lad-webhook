@@ -1,0 +1,59 @@
+{:secrets #include #join [#env HOME "/lad_webhook/.secrets.edn"]
+ :db-type #profile {:prod {:postgres {:desal {:dbname #ref [:secrets :postgres-dbname]
+                                              :dbtype "postgres"
+                                              :user #ref [:secrets :postgres-user]
+                                              :username #ref [:secrets :postgres-user]
+                                              :password #ref [:secrets :postgres-pass]
+                                              :host #ref [:secrets :postgres-host]}
+                                      :bases_auxiliares {:dbname #ref [:secrets :postgres-aux-dbname]
+                                                         :dbtype "postgres"
+                                                         :user #ref [:secrets :postgres-aux-user]
+                                                         :username #ref [:secrets :postgres-aux-user]
+                                                         :password #ref [:secrets :postgres-aux-pass]
+                                                         :host #ref [:secrets :postgres-aux-host]}}
+                           :relativity {:asistencial {:dbtype "relativity"
+                                                      :dbname #ref [:secrets :relativity-asist]
+                                                      :classname #ref [:secrets :driver-name]
+                                                      :user #ref [:secrets :relativity-user-asist]
+                                                      :password #ref [:secrets :relativity-pass-asist]
+                                                      :host #ref [:secrets :relativity-host-asist]
+                                                      :port  #ref [:secrets :relativity-port-asist]}
+                                        :maestros {:dbtype "relativity"
+                                                   :dbname #ref [:secrets :relativity-master]
+                                                   :classname #ref [:secrets :driver-name]
+                                                   :user #ref [:secrets :relativity-user-master]
+                                                   :password #ref [:secrets :relativity-pass-master]
+                                                   :host #ref [:secrets :relativity-host-master]
+                                                   :port #ref [:secrets :relativity-port-master]}}}
+                    :dev {:postgres {:desal {:dbname "desal"
+                                             :dbtype "postgres"
+                                             :username "desal"
+                                             :password "desal2016"
+                                             :host "10.200.0.90"}
+                                     :bases_auxiliares {:dbname "bases_auxiliares"
+                                                        :dbtype "postgres"
+                                                        :username "auxiliar"
+                                                        :password "auxi2013"
+                                                        :host "10.200.0.90"}}
+                          :relativity {:asistencial {:dbtype "relativity"
+                                                     :dbname "asistencialsc9"
+                                                     :classname "relativity.jdbc.Driver"
+                                                     :user "ADMIN"
+                                                     :password ""
+                                                     :host "10.200.0.30"
+                                                     :port  1583}
+                                       :maestros {:dbtype "relativity"
+                                                  :dbname "Maestrossc9"
+                                                  :classname "relativity.jdbc.Driver"
+                                                  :user "ADMIN"
+                                                  :password ""
+                                                  :host "10.200.0.30"
+                                                  :port 1583}}}}
+ :client-id #profile {:dev "lad" 
+                      :test #ref [:secrets client-id]
+                      :prod #ref [:secrets client-id]}
+ :client-secret #profile {:dev "123456"
+                          :test #ref [:secrets client-secret]
+                          :prod #ref [:secrets client-secret]}
+ :service-port #profile {:prod #ref [:secrets :port]
+                         :dev 2000}}

@@ -1,16 +1,4 @@
-;; ---------------------------------------------------------
-;; REPL workflow development tools
-;;
-;; Include development tool libraries vai aliases from practicalli/clojure-cli-config
-;; Start Rich Terminal UI REPL prompt:
-;; `clojure -M:repl/reloaded`
-;;
-;; Or call clojure jack-in from an editor to start a repl
-;; including the `:dev/reloaded` alias
-;; - alias included in the Emacs `.dir-locals.el` file
-;; ---------------------------------------------------------
-
-#_{:clj-kondo/ignore [:unused-namespace :unused-referred-var]}
+{:clj-kondo/ignore [:unused-namespace :unused-referred-var]}
 (ns user
   "Tools for REPL Driven Development"
   (:require
@@ -104,7 +92,7 @@
   (restart)
   (stop)      
   (start) 
-                
+                 
         
   (tap> (:donut.system/instances (system))) 
   #'system
