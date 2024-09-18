@@ -10,20 +10,20 @@
                          :histpacm ;; minutos
                          :histpacr ;; resto (segundos...) completar con ceros
                          :histpace ;; 2, guardia
-                         :histpacespfir ;; código de especialidad (Definir!)
+                         :histpacespfir ;; 407
                          :histpacnro1 ;; hc
                          :histpacfec1 ;; fecha ingreso tbc_guardia
                          :histpacnro2 ;; hc
-                         :histpacespfir1 ;; código de especialidad
-                         :histpacmedfir ;; código de médico (Pendiente!!)
+                         :histpacespfir1 ;; 407
+                         :histpacmedfir ;; 999880 (con dígito verificador)
                          :histpacmotivo ;; numerador => Hace referencia al diagnóstico
                          :histpacestudi ;; 0 
                          :histpachorasobre ;; 0
                          :histpachfinal ;; hora final atención
                          :histpacmfinal ;; minutos hora final atención
                          :histpacrfinal ;; completar con ceros
-                         :histpacdiagno ;; diagnóstico
-                         :histpacpatolo ;; Por definir
+                         :histpacdiagno ;; diagnóstico => sacar de tbc_patologia
+                         :histpacpatolo ;; 3264 
                          :histpactratam ;; motivo (guardar acá numerador ) tbl_parametros param_id 16, inc contador_entero y guardar ese número
                          :histpacmedfirnya ;; nombre médico (doctor_name)
                          :histpacmedfirmat ;; matricula (doctor_enrollment_type)
@@ -34,8 +34,8 @@
                          :histpacderivads ;; 0
                          :histpacderivasec ;; ""
                          :histpacobra ;; obra
-                         :histpacpplan ;; plan (está en guardia??)
-                         :histpacplan ;; plan (está en guardia??)
+                         :histpacpplan ;; plan 
+                         :histpacplan ;; plan 
                          :histpacafil ;; nro afiliado
                          :histpacpedambula ;; 0
                          :histpacconshiv ;; ""
@@ -89,6 +89,12 @@
                :from :tbc_guardia
                :where [:and [:= :guar_histclinica histclinica] [:= :guar_fechaingreso fecha] [:= :guar_horaingreso hora]]}))
 
+(defn busca-en-tbc-patologia
+  [codigo]
+  (sql/format {:select :pat_descrip
+               :from :tbc_patologia
+               :where [:= :pat_codi codigo]}))
+ 
 (defn obtener-numerador
   []
   (sql/format {:select :contador_entero
@@ -109,4 +115,6 @@
                  :set  {:contador_entero (inc numerador_actual)}
                  :where [:= :paramid 16]
                  :returning [:contador_entero]})) 
+  
+  (busca-en-tbc-patologia 152)
   )

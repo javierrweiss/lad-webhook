@@ -32,9 +32,10 @@
                          :patient_name
                          :patient_external_id)
              obj))]
-    (if (objeto-valido? (:event_object body))
-      body
-      (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request})))))
+    (cond 
+      (not= (:event_type body) "CALL_ENDED") body 
+      (objeto-valido? (:event_object body)) body
+      :else (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request})))))
 
 (defn valida-paciente
   "Si tiene éxito devuelve un mapa con el registro del paciente, la fecha, la hora y la información necesaria del request.
@@ -152,15 +153,21 @@
                             :patient_location_country_code "PA",
                             :doctor_id "27217651420",
                             :patient_location_region_code "",
-                            :call_id "669082f3492f32a38fe8fc37"}}]
+                            :call_id "669082f3492f32a38fe8fc37"}}
+      req3 {:event_type "CALL_STARTED"
+            :datetime "x"
+            :event_object nil}                      ]
    (valida-event-object req) := req
-   (valida-event-object req2) :throws clojure.lang.ExceptionInfo)
+   (valida-event-object req2) :throws clojure.lang.ExceptionInfo
+   (valida-event-object req3) := req3)
    
    :rcf)     
 
 
 (comment
   
+(not= "CALL_STARTED" "CALL_ENDED")
+
   (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string)) 
  
   (let [conexiones {:asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)

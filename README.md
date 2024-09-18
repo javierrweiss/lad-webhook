@@ -14,7 +14,7 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
 [X]  Hay que filtrar el tipo de evento
 [ ] ~~Faltaría la tabla de tbc_patologia~~
 [] Probar integración con testcontainers
-[] Verificar todos los campos que hay que actualizar en tbc_guardia
+[X] Verificar todos los campos que hay que actualizar en tbc_guardia
 [X] Implementar middleware para manejo de excepciones 
 [X] ~~Implementar autenticación por JWT~~ Autenticación tipo OAUTH2
 [] Implementar tests para generación de registros

@@ -1,9 +1,10 @@
 (ns sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia
   (:require
-   [manifold.deferred :as d] 
+   [manifold.deferred :as d]
    [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac
                                                            inserta-en-tbc-histpac-txt
-                                                           actualiza-tbc-guardia]]
+                                                           actualiza-tbc-guardia
+                                                           busca-en-tbc-patologia]]
    [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]]
    [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora
                                                                     obtener-minutos
@@ -45,71 +46,75 @@
 
 (defn prepara-registros
   "Adapta el mapa que viene del request y devuelve un vector con tres registros (también vectores) listos para ser persistidos"
-  [{:keys [guar-hist-clinica 
-           guar-fecha-ingreso 
+  [{:keys [guar-hist-clinica
+           guar-fecha-ingreso
            guar-hora-ingreso
            hora-inicio-atencion
-           hora-final-atencion 
-           fecha-inicio-atencion 
-           guar-obra 
+           hora-final-atencion
+           fecha-inicio-atencion
+           guar-obra
            guar-plan
            guar-nroben
-           diagnostico  
-           historia  
-           patologia 
+           diagnostico
+           historia
+           descripcion-patologia
+           ;;patologia // Se ignora cie10 y se introduce código fijo: 3264
            histpactratam
-           histpacmotivo 
+           histpacmotivo
            medico
-           matricula]}] 
- (let [hora (obtener-hora guar-hora-ingreso)
-       minutos (obtener-minutos guar-hora-ingreso)
-       hora-fin (obtener-hora hora-final-atencion)
-       minutos-fin (obtener-minutos hora-final-atencion)
-       hora-ini (obtener-hora hora-inicio-atencion)
-       minutos-ini (obtener-minutos hora-inicio-atencion)
-       cod-patol 9]
-   [[guar-hist-clinica guar-fecha-ingreso guar-hora-ingreso cod-patol hora-final-atencion fecha-inicio-atencion]
-   [guar-hist-clinica 
-    guar-fecha-ingreso 
-    hora 
-    minutos 
-    0 
-    2
-    0 ;; especialidad por definir
-    guar-hist-clinica
-    guar-fecha-ingreso
-    guar-hist-clinica
-    0 ;; especialidad por definir
-    0 ;; código de médico por definir 
-    0
-    0
-    0
-    hora-fin
-    minutos-fin
-    0
-    diagnostico
-    patologia ;; patologia por definir
-    histpactratam
-    medico
-    matricula
-    hora-ini
-    minutos-ini
-    0
-    0
-    0
-    ""
-    guar-obra
-    guar-plan
-    guar-plan
-    guar-nroben 
-    0
-    ""
-    0
-    0
-    0
-    "N"
-    0]
-   [histpactratam historia histpacmotivo diagnostico medico matricula]]))
+           matricula]}]
+  (let [hora (obtener-hora guar-hora-ingreso)
+        minutos (obtener-minutos guar-hora-ingreso)
+        hora-fin (obtener-hora hora-final-atencion)
+        minutos-fin (obtener-minutos hora-final-atencion)
+        hora-ini (obtener-hora hora-inicio-atencion)
+        minutos-ini (obtener-minutos hora-inicio-atencion)
+        cod-patol 9]
+    [;; tbc_guardia
+     [guar-hist-clinica guar-fecha-ingreso guar-hora-ingreso cod-patol hora-final-atencion fecha-inicio-atencion]
+    ;; tbc_histpac
+     [guar-hist-clinica
+      guar-fecha-ingreso
+      hora
+      minutos
+      0
+      2
+      407
+      guar-hist-clinica
+      guar-fecha-ingreso
+      guar-hist-clinica
+      407
+      999880
+      0
+      0
+      0
+      hora-fin
+      minutos-fin
+      0
+      (or descripcion-patologia diagnostico) 
+      3264
+      histpactratam
+      medico
+      matricula
+      hora-ini
+      minutos-ini
+      0
+      0
+      0
+      ""
+      guar-obra
+      guar-plan
+      guar-plan
+      guar-nroben
+      0
+      ""
+      0
+      0
+      0
+      "N"
+      0]
+   ;; tbc_histpac_txt
+     [histpactratam historia histpacmotivo diagnostico medico matricula]]))
 
 (defn guarda-texto-de-historia
   ([conn numerador texto]
@@ -130,7 +135,7 @@
        (ejecuta!
         conn
         (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) (str "Profesional: " medico " Matricula: " matricula) cantidad]))))))
- 
+
 (defn crea-historia-clinica!
   "Persiste 4 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
   [db registro-guardia registro-historia-paciente registro-historia-texto]
@@ -145,12 +150,16 @@
 (defn persiste-historia-clinica!
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
   [db paciente]
-   @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
-                       histpacmotivo (obtiene-numerador! (:desal db))
-                       [guardia hc hc-texto] (prepara-registros (assoc paciente :histpactratam histpactratam :histpacmotivo histpacmotivo))]
-                      (-> (crea-historia-clinica! (:asistencial db) guardia hc hc-texto)
-                          (d/catch Exception #(throw %))))) 
-   
+  @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
+                histpacmotivo (obtiene-numerador! (:desal db))
+                descripcion-patologia (ejecuta! (:maestros db) (busca-en-tbc-patologia 3264))
+                [guardia hc hc-texto] (prepara-registros (assoc paciente 
+                                                                :histpactratam histpactratam 
+                                                                :histpacmotivo histpacmotivo
+                                                                :descripcion-patologia descripcion-patologia))]
+               (-> (crea-historia-clinica! (:asistencial db) guardia hc hc-texto)
+                   (d/catch Exception #(throw %)))))
+
 (defn ingresar-historia-a-sistema
   [db paciente]
   (when (persiste-historia-clinica! db paciente)
@@ -178,7 +187,7 @@
    (string? (:nombre obj)) := true
    (number? (:hc obj)) := true
    (string? (:patologia obj)) := true))
-  
+
 (comment
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)
@@ -200,12 +209,12 @@
              :nombre "John Doe",
              :guar-hora-ingreso 1300,
              :motivo "Fiebre / Sin otros síntomas mencionados"}
-       registros (prepara-registros req)]
-    #_(prepara-registros req) 
+        registros (prepara-registros req)]
+    #_(prepara-registros req)
     (persiste-historia-clinica! {:asistencial asistencial
-                                  :desal desal} req)
-    #_@(apply crea-historia-clinica! asistencial registros)) 
-       
+                                 :desal desal} req)
+    #_@(apply crea-historia-clinica! asistencial registros))
+
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         registro [182222 20240808 1300 9 343 20240712]]
     #_(actualiza-tbc-guardia registro)
@@ -220,13 +229,13 @@
                       1)
                 b (do (Thread/sleep 2000) 2)]
                (d/future (+ a b)))
-  
+
   @(d/let-flow [a (do (Thread/sleep 2000) 2)]
                (+ a (d/zip
                      (d/future (inc 20))
                      (d/future (throw (ex-info "Upps!" {})))
                      (d/future (inc 23)))))
-  
+
   (when (throw (ex-info "excepcion boluda" {}))
     1)
 
