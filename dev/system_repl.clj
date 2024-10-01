@@ -31,21 +31,21 @@
                     {[:env :app-env] :dev
                      [:env :app-version] "0.0.0-SNAPSHOT"
                      [:services :http-server ::donut/config :options :join?] false
-                     [:conexiones :maestros ::donut/config] {:specs (:maestros conexiones)}
-                     [:conexiones :maestros ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                     #_#_[:conexiones :maestros ::donut/config] {:specs (:maestros conexiones)}
+                     #_#_[:conexiones :maestros ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                   (println "Ejecutando post-start maestros..."))
-                     [:conexiones :desal ::donut/config] {:specs (:desal conexiones)}
-                     [:conexiones :desal ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                     #_#_[:conexiones :desal ::donut/config] {:specs (:desal conexiones)}
+                     #_#_[:conexiones :desal ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                (println "Ejecutando post-start desal...")
                                                                (crear-tabla-tbl-parametros specs))
-                     [:conexiones :asistencial ::donut/config] {:specs (:asistencial conexiones)}
-                     [:conexiones :asistencial ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                     #_#_[:conexiones :asistencial ::donut/config] {:specs (:asistencial conexiones)}
+                     #_#_[:conexiones :asistencial ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                      (println "Ejecutando post-start asistencial...")
                                                                      (crear-tabla-tbc-guardia specs)
                                                                      (crear-tabla-tbc-hist-pac specs)
                                                                      (crear-tabla-tbc-histpac-txt specs))
-                     [:conexiones :bases_auxiliares ::donut/config] {:specs (:bases_auxiliares conexiones)}
-                     [:conexiones :bases_auxiliares ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
+                     #_#_[:conexiones :bases_auxiliares ::donut/config] {:specs (:bases_auxiliares conexiones)}
+                     #_#_[:conexiones :bases_auxiliares ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]
                                                                           (println "Ejecutando post-start bases auxiliares")
                                                                           (crear-tabla-tbl-ladguardia-fallidos specs))
                      [:services :event-log-publisher ::donut/config]

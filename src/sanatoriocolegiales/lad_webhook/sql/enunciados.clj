@@ -108,7 +108,6 @@
                :where [:= :paramid 16]
                :returning [:contador_entero]})) 
 
-
 (comment
   (let [numerador_actual 1]
     (sql/format {:update :tbl_parametros

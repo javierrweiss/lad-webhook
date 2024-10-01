@@ -69,6 +69,10 @@
         minutos-fin (obtener-minutos hora-final-atencion)
         hora-ini (obtener-hora hora-inicio-atencion)
         minutos-ini (obtener-minutos hora-inicio-atencion)
+        nro-afiliado (let [len (count guar-nroben)]
+                       (if (> len 15)
+                         (->> guar-nroben (take 15) (apply str))
+                         guar-nroben))
         cod-patol 9]
     [;; tbc_guardia
      [guar-hist-clinica guar-fecha-ingreso guar-hora-ingreso cod-patol hora-final-atencion fecha-inicio-atencion]
@@ -91,7 +95,7 @@
       hora-fin
       minutos-fin
       0
-      (or descripcion-patologia diagnostico) 
+      descripcion-patologia 
       3264
       histpactratam
       medico
@@ -102,10 +106,10 @@
       0
       0
       ""
-      guar-obra
-      guar-plan
-      guar-plan
-      guar-nroben
+      (or guar-obra 0)
+      (or guar-plan "")
+      ""
+      nro-afiliado
       0
       ""
       0
@@ -165,8 +169,10 @@
   (when (persiste-historia-clinica! db paciente)
     {:id (:guar-hist-clinica paciente)}))
 
-
+ 
 (tests
+
+ "Cuando event-object recibe request, devuelve mapa con tipos de datos esperados..."
 
  (def event-object (-> (io/resource "payload_model.edn")
                        slurp
@@ -186,7 +192,75 @@
    (string? (:historia obj)) := true
    (string? (:nombre obj)) := true
    (number? (:hc obj)) := true
-   (string? (:patologia obj)) := true))
+   (string? (:patologia obj)) := true)
+
+ "Cuando se recibe request y registro de guardia de paciente, se crean tres registros con el tamaño y los tipos de datos adecuados..."
+
+ (def test-obj
+   {:guar-hist-clinica 145233
+    :guar-fecha-ingreso 20240924
+    :guar-hora-ingreso 1156
+    :hora-inicio-atencion 1245
+    :hora-final-atencion 1305
+    :fecha-inicio-atencion 20240924
+    :guar-obra 1820
+    :guar-plan "XILOPORTE"
+    :guar-nroben "ERFD·DDSDSDS-DSDS"
+    :diagnostico "Este es un diagnóstico muy, pero muy arrecho, ¡arreeechoo!"
+    :historia "Estas son las anotaciones del médico"
+    :descripcion-patologia "PATOLOGIA PATOLOGICA"
+    :histpactratam 123122
+    :histpacmotivo 545656
+    :medico "JUNA MACENO"
+    :matricula 1234587})
+
+ (let [registros (prepara-registros test-obj)]
+   (count registros) := 3
+   (map count registros) := [6 40 6]
+   (every? number? (first registros)) := true
+   (mapv type (second registros))  := [java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Integer
+                                       java.lang.Integer
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Integer
+                                       java.lang.Integer
+                                       java.lang.Long
+                                       java.lang.String
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.String
+                                       java.lang.Long
+                                       java.lang.Integer
+                                       java.lang.Integer
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.String
+                                       java.lang.Long
+                                       java.lang.String
+                                       java.lang.String
+                                       java.lang.String
+                                       java.lang.Long
+                                       java.lang.String
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.Long
+                                       java.lang.String
+                                       java.lang.Long]
+   (mapv type (last registros)) := [java.lang.Long java.lang.String java.lang.Long java.lang.String java.lang.String java.lang.Long])
+   
+   :rcf) 
 
 (comment
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
@@ -238,5 +312,5 @@
 
   (when (throw (ex-info "excepcion boluda" {}))
     1)
-
+  
   :rcf)

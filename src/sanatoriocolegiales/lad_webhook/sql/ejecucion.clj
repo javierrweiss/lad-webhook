@@ -80,5 +80,6 @@
      paciente
      :not-found)
   
+  (sql-auxiliar/crear-tabla-tbl-ladguardia-fallidos bases_auxiliares)
 
   )
