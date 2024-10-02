@@ -63,7 +63,8 @@
            histpactratam
            histpacmotivo
            medico
-           matricula]}]
+           matricula
+           motivo]}]
   (let [hora (obtener-hora guar-hora-ingreso)
         minutos (obtener-minutos guar-hora-ingreso)
         hora-fin (obtener-hora hora-final-atencion)
@@ -90,7 +91,7 @@
       guar-hist-clinica
       407
       999880
-      0
+      histpacmotivo
       0
       0
       hora-fin
@@ -119,7 +120,7 @@
       "N"
       0]
    ;; tbc_histpac_txt
-     [histpactratam historia histpacmotivo diagnostico medico matricula]]))
+     [histpactratam diagnostico histpacmotivo (str "Motivo: " motivo " Tratamiento: " historia) medico matricula]]))
 
 (defn guarda-texto-de-historia
   ([conn numerador texto]
@@ -274,11 +275,11 @@
                             slurp
                             edn/read-string))
 
-  (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
-        desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)
+  (let [asistencial (-> (system-repl/system) :donut.system/instances :env :env-conf :db-type :relativity :asistencial)
+        desal (-> (system-repl/system) :donut.system/instances :env :env-conf :db-type :postgres :desal)
         req {:guar-hist-clinica 182222,
              :patologia "H92",
-             :hora-inicio-atencion 112,
+             :hora-inicio-atencion 112, 
              :medico "Amezqueta Marcela",
              :guar-obra 1820,
              :guar-plan "4000",
@@ -295,8 +296,11 @@
              :guar-hora-ingreso 1300,
              :motivo "Fiebre / Sin otros síntomas mencionados"}
         registros (prepara-registros req)]
+    (tap> (ejecuta! asistencial (actualiza-tbc-guardia (first registros))))
+    (tap> (-> (ejecuta! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 182222"])
+              first))
     #_(prepara-registros req)
-    (persiste-historia-clinica! {:asistencial asistencial
+    #_(persiste-historia-clinica! {:asistencial asistencial
                                  :desal desal} req)
     #_@(apply crea-historia-clinica! asistencial registros))
 

@@ -2,6 +2,7 @@
   (:require [clojure.test :refer [deftest is testing use-fixtures run-test run-all-tests]]
             [donut.system :as ds]
             [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as guardia]
+            [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [ingresar-historia-a-sistema]]
             [clj-test-containers.core :as tc]
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]
@@ -76,16 +77,60 @@
         (is (== 201 (:status (guardia/procesa-atencion payload sistema))))))))
 
 
-(deftest ingreso
+(deftest ingreso-registros-db
   (with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])]
-    (jdbc/execute! conn
-                   (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla")
-                   {:builder-fn rs/as-unqualified-kebab-maps})
-    (tap> (jdbc/execute! conn ["SELECT * from tbc_guardia"] {:builder-fn rs/as-unqualified-kebab-maps}))))
-
+    (let [sistema {:asistencial conn
+                   :desal conn
+                   :bases_auxiliares conn
+                   :maestros conn
+                   :env :test}
+          paciente {:hc 145200
+                    :fecha 20241002
+                    :hora 1256
+                    :nombre "Pepino El Breve"
+                    :historia "Presenta un mal muy severo: estupidez"
+                    :patologia "Estupidez cronica"
+                    :diagnostico "Falta de cultura"
+                    :motivo "Ignorancia"
+                    :patient_external_id "145200"
+                    :guar-hist-clinica 145200
+                    :guar-fecha-ingreso 20241002
+                    :guar-hora-ingreso 1256
+                    :hora-inicio-atencion 1256
+                    :hora-final-atencion 1314
+                    :fecha-inicio-atencion 20241002
+                    :guar-obra 1820
+                    :guar-plan "4000-A"
+                    :guar-nroben "1123-AC"
+                    :descripcion-patologia "Cree saberlo todo y de todo opina"
+                    :histpactratam 123456
+                    :histpacmotivo 123457
+                    :medico "Galeno"
+                    :matricula 125546}
+          ejecucion (ingresar-historia-a-sistema sistema paciente)]
+      (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
+        (is (== (:id ejecucion) (:hc paciente))))
+          ;; Inserta registro en guardia
+      (println (str "Insertando registro en guardia... "
+                    (jdbc/execute! (:asistencial sistema)
+                                   (aux/sql-insertar-registro-en-guardia 145200 20241002 1256 1 1 "Pepino El Breve" 1820 "4000-A" "1123-AC" "A" "B" "Bla")
+                                   {:builder-fn rs/as-unqualified-kebab-maps})))
+      (let [registro-histpac (jdbc/execute! conn ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-kebab-maps})
+            registro-histpac-txt (jdbc/execute! conn ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})
+            registro-guardia (jdbc/execute! conn ["SELECT * FROM tbc_guardia"] {:builder-fn rs/as-unqualified-kebab-maps})]
+        (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
+          (is (== 5 (count registro-histpac-txt)))
+          (is (== 1 (count registro-histpac))))
+        (testing "Cuando ingresa exitosamente los registros, actualiza el registro correspondiente en tbc_guardia"
+          (println (str "Consulta a guardia: " registro-guardia))
+          (is (== 4 (-> registro-guardia first :guar-estado)))
+          (is (== 9 (-> registro-guardia first :guar-diagnostico)))
+          (is (== 20241002 (-> registro-guardia first :guar-fechaalta)))
+          (is (== 1314 (-> registro-guardia first :guar-horaalta))))))))
+ 
 (comment 
    
-  (run-test ingreso)
+  (run-test ingreso-registros-db)
   
   (run-test dummy-connection-test)
   
