@@ -2,7 +2,7 @@
   (:require [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta!]]
             [sanatoriocolegiales.lad-webhook.seguridad.autorizacion :refer [autenticar-y-autorizar-solicitud]]
             [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [selecciona-guardia inserta-en-tbl-ladguardia-fallidos]]
-            [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [extraer-event-object]] 
+            [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer []]
             [clojure.java.io :as io]
             [com.brunobonacci.mulog :as mulog]
             [hyperfiddle.rcf :refer [tests]]
@@ -15,9 +15,10 @@
   (mulog/log ::validar-request :fecha (LocalDateTime/now))
   (if (autenticar-y-autorizar-solicitud req env)
     (:body-params req)
-    (throw (ex-info "Solicitud no autorizada" {:type :sanatoriocolegiales.lad-webhook.error.error/no-autorizada})))) 
+    (throw (ex-info "Solicitud no autorizada" {:type :sanatoriocolegiales.lad-webhook.error.error/no-autorizada}))))
 
 (defn valida-event-object
+  "Recibe cuerpo del request, valida event-object y lo devuelve"
   [body]
   (letfn [(objeto-valido? [obj]
             ((every-pred :call_diagnosis
@@ -32,40 +33,41 @@
                          :patient_name
                          :patient_external_id)
              obj))]
-    (cond 
-      (not= (:event_type body) "CALL_ENDED") body 
-      (objeto-valido? (:event_object body)) body
-      :else (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request})))))
+    (let [event-object (:event_object body)]
+      (cond 
+        (objeto-valido? event-object) event-object
+        :else (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))))))
 
 (defn valida-paciente
   "Si tiene éxito devuelve un mapa con el registro del paciente, la fecha, la hora y la información necesaria del request.
    Arroja excepción si la validación no es exitosa y escribe los datos en una tabla auxiliar"
-  [{:keys [asistencial bases_auxiliares]} {:keys [event_object]}]
-  (mulog/log ::validar-paciente :fecha (LocalDateTime/now) :paciente (:patient_external_id event_object)) 
-  (let [{:keys [hc
-                fecha
-                hora
-                nombre
-                historia
-                patologia
-                diagnostico
-                motivo]
-         :as request-info} (extraer-event-object event_object)]
-    (if-let [paciente (->> (selecciona-guardia hc fecha hora) (ejecuta! asistencial) seq)] 
-      (merge (first paciente) request-info)
-      (do
-        (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [hc
-                                                                        fecha
-                                                                        hora
-                                                                        nombre
-                                                                        historia
-                                                                        patologia
-                                                                        diagnostico
-                                                                        motivo]))
-        (throw (ex-info "Paciente no encontrado" {:type :sanatoriocolegiales.lad-webhook.error.error/recurso-no-encontrado
-                                                  :fecha fecha
-                                                  :hora hora
-                                                  :hc hc}))))))
+  [{:keys [asistencial bases_auxiliares]}
+   {:keys [hc
+           fecha
+           hora
+           nombre
+           historia
+           patologia
+           diagnostico
+           motivo
+           patient_external_id]
+    :as request-info}]
+  (mulog/log ::validar-paciente :fecha (LocalDateTime/now) :paciente patient_external_id)
+  (if-let [paciente (->> (selecciona-guardia hc fecha hora) (ejecuta! asistencial) seq)]
+    (merge (first paciente) request-info)
+    (do
+      (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [hc
+                                                                      fecha
+                                                                      hora
+                                                                      nombre
+                                                                      historia
+                                                                      patologia
+                                                                      diagnostico
+                                                                      motivo]))
+      (throw (ex-info "Paciente no encontrado" {:type :sanatoriocolegiales.lad-webhook.error.error/recurso-no-encontrado
+                                                :fecha fecha
+                                                :hora hora
+                                                :hc hc})))))
 
 
 (tests
@@ -123,7 +125,7 @@
              :datetime "x"
              :event_object {:patient_id "12345678",
                             :doctor_enrollment_prov "C",
-                            :patient_phone "+1234567890" 
+                            :patient_phone "+1234567890"
                             :patient_gender "F",
                             :call_cie10 "H92",
                             :call_doctor_rating 0,
@@ -154,26 +156,47 @@
                             :doctor_id "27217651420",
                             :patient_location_region_code "",
                             :call_id "669082f3492f32a38fe8fc37"}}
-      req3 {:event_type "CALL_STARTED"
-            :datetime "x"
-            :event_object nil}                      ]
-   (valida-event-object req) := req
+       req3 {:event_type "CALL_STARTED"
+             :datetime "x"
+             :event_object nil}]
+   (valida-event-object req) := (:event_object req)
    (valida-event-object req2) :throws clojure.lang.ExceptionInfo
-   (valida-event-object req3) := req3)
-   
-   :rcf)     
+   (valida-event-object req3) :throws clojure.lang.ExceptionInfo)
+
+ :rcf)
 
 
 (comment
-  
-(not= "CALL_STARTED" "CALL_ENDED")
 
-  (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string)) 
- 
+  (valida-event-object nil)
+
+  (letfn [(objeto-valido? [obj]
+            ((every-pred :call_diagnosis
+                         :call_cie10
+                         :call_motive
+                         :call_doctor_comment
+                         :call_duration
+                         :call_start_datetime
+                         :order_id
+                         :doctor_name
+                         :doctor_enrollment_type
+                         :patient_name
+                         :patient_external_id)
+             obj))]
+    (let [body nil]
+      (cond
+        #_#_(not= (:event_type body) "CALL_ENDED") body
+        (objeto-valido? (:event_object body)) body
+        :else (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request})))))
+
+  (not= "CALL_STARTED" "CALL_ENDED")
+
+  (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string))
+
   (let [conexiones {:asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
                     :bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares)}]
     (valida-paciente conexiones request))
-  
+
   ;; No hay ventaja en desempeño ni en legibilidad para usar una sola desestructuración
   (dotimes [_ 10]
     (println "Una sola desestructuración....")
@@ -197,6 +220,5 @@
                    patient_external_id]} event_object
            {:keys [uid]}  patient_external_id]
        (list datetime call_diagnosis call_cie10 call_motive call_doctor_comment patient_name uid))))
-  
-  ((every-pred :a :b :c :d) {:a 2 :b "3d" :c 'sd :d true :e 23 :m 9980})
-  )  
+
+  ((every-pred :a :b :c :d) {:a 2 :b "3d" :c 'sd :d true :e 23 :m 9980}))  

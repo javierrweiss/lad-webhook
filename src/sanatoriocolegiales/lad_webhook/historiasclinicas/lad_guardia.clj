@@ -15,6 +15,7 @@
    [clojure.java.io :as io]))
 
 (defn extraer-event-object
+  "Recibe el event-object del request y devuelve un mapa con los datos pre-procesados"
   [{:keys [call_diagnosis
            call_cie10
            call_motive
@@ -126,9 +127,14 @@
   ([conn numerador texto medico matricula]
    (let [len (count texto)
          textos (if (> len 77)
-                  (->> (partition-all 77 texto)
+                  (->> (partition-all 60 texto)
                        (map #(apply str %)))
                   [texto])
+         profesional-y-matricula (let [s (str "Profesional: " medico " Matricula: " matricula)
+                                       len (count s)]
+                                   (if (> len 77)
+                                     (->> s (take 77) (apply str))
+                                     s))
          cantidad (count textos)
          contador (atom 1)]
      (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 0 0 "" cantidad]))
@@ -138,7 +144,7 @@
      (when medico
        (ejecuta!
         conn
-        (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) (str "Profesional: " medico " Matricula: " matricula) cantidad]))))))
+        (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) profesional-y-matricula cantidad]))))))
 
 (defn crea-historia-clinica!
   "Persiste 4 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
@@ -160,7 +166,7 @@
                 [guardia hc hc-texto] (prepara-registros (assoc paciente 
                                                                 :histpactratam histpactratam 
                                                                 :histpacmotivo histpacmotivo
-                                                                :descripcion-patologia descripcion-patologia))]
+                                                                :descripcion-patologia (-> descripcion-patologia first :pat-descrip)))]
                (-> (crea-historia-clinica! (:asistencial db) guardia hc hc-texto)
                    (d/catch Exception #(throw %)))))
 
@@ -263,6 +269,11 @@
    :rcf) 
 
 (comment
+
+  (extraer-event-object (-> (io/resource "payload_model.edn")
+                            slurp
+                            edn/read-string))
+
   (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
         desal (-> (system-repl/system) :donut.system/instances :conexiones :desal)
         req {:guar-hist-clinica 182222,
@@ -312,5 +323,6 @@
 
   (when (throw (ex-info "excepcion boluda" {}))
     1)
+  
   
   :rcf)
