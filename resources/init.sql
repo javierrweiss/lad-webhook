@@ -51,9 +51,9 @@ CREATE TABLE tbc_guardia (
 	Guar_HoraIngreso INTEGER NOT NULL,
 	Guar_Especialidad INTEGER NOT NULL,
 	Guar_Estado INTEGER NOT NULL,
-	Guar_FechaIngreso1 INTEGER NOT NULL,
-	Guar_HoraIngreso1 INTEGER NOT NULL,
-	Guar_HistClinica1 DECIMAL(10,0) NOT NULL,
+	Guar_Fecha_Ingreso INTEGER NOT NULL,  -- Difiere del original para poder resolver discordancia con el modo en el que next.jdbc traduce los campos en tablas relativity y postgres
+	Guar_Hora_Ingreso INTEGER NOT NULL,   -- Difiere del original para poder resolver discordancia con el modo en el que next.jdbc traduce los campos en tablas relativity y postgres
+	Guar_Hist_Clinica DECIMAL(10,0) NOT NULL,  -- Difiere del original para poder resolver discordancia con el modo en el que next.jdbc traduce los campos en tablas relativity y postgres
 	Guar_Especialidad1 INTEGER NOT NULL,
 	Guar_Estado1 INTEGER NOT NULL,
 	Guar_FechaIngreso3 INTEGER NOT NULL,
@@ -101,19 +101,75 @@ CREATE TABLE tbc_guardia (
 	GuarNivel INTEGER,
 	GuarMedicab CHAR(7) NOT NULL,
 	GuarNropres INTEGER,
-	CONSTRAINT X_1_2_3 PRIMARY KEY (Guar_HistClinica,Guar_FechaIngreso,Guar_HoraIngreso)
+	CONSTRAINT X_1_2_3 PRIMARY KEY (Guar_Hist_Clinica,Guar_Fecha_Ingreso,Guar_Hora_Ingreso)
 );
-CREATE INDEX X_4_5_6_7 ON tbc_guardia (Guar_Especialidad,Guar_Estado,Guar_FechaIngreso1,Guar_HoraIngreso1);
-CREATE INDEX X_8_9_A ON tbc_guardia (Guar_HistClinica1,Guar_Especialidad1,Guar_Estado1);
+CREATE INDEX X_4_5_6_7 ON tbc_guardia (Guar_Especialidad,Guar_Estado,Guar_Fecha_Ingreso,Guar_Hora_Ingreso);
+CREATE INDEX X_8_9_A ON tbc_guardia (Guar_Hist_Clinica,Guar_Especialidad1,Guar_Estado1);
 CREATE INDEX X_B_C_D_E ON tbc_guardia (Guar_FechaIngreso3,Guar_HoraIngreso3,Guar_Especialidad3,Guar_Estado3);
 
-CREATE TABLE tbl_hist_txt (
-	ht_histclin numeric(10) NOT NULL,
-	ht_fecha numeric(8) NOT NULL,
-	ht_hora numeric(8) NOT NULL,
-	ht_entrada numeric(1) NOT NULL,
-	ht_motivo varchar(7800) NULL,
-	ht_tratamiento varchar(7800) NULL,
-	ht_estudios varchar(7800) NULL,
-	CONSTRAINT pk_hist_txt PRIMARY KEY (ht_histclin, ht_fecha, ht_hora, ht_entrada)
+CREATE TABLE IF NOT EXISTS tbc_histpac_txt (
+	Txt1 DECIMAL(10,0) NOT NULL,
+	Txt1g INTEGER NOT NULL,
+	Txt2 INTEGER NOT NULL,
+	Txt3 INTEGER NOT NULL,
+	Txt4 CHAR(78) NOT NULL,
+	Txt6 INTEGER,
+	CONSTRAINT X_1_2_3_4 PRIMARY KEY (Txt1,Txt1g,Txt2,Txt3)
 );
+
+CREATE TABLE IF NOT EXISTS tbl_ladguardia_fallidos( 
+                        hc int,
+                        fechaingreso int,
+                        horaingreso int,
+                        nombre varchar,
+                        textohc varchar,
+                        patolcie varchar,
+                        diagnostico varchar,
+                        motivo varchar
+);
+
+CREATE TABLE tbl_parametros (
+	paramid int4 NOT NULL,
+	fechadb date NULL,
+	fechacbl int4 NULL,
+	contador_entero numeric(10) NULL,
+	contador_decimal numeric(10, 2) NULL,
+	comentario bpchar(50) NULL,
+	CONSTRAINT tbl_parametros_pkey PRIMARY KEY (paramid)
+);
+
+INSERT INTO tbl_parametros (paramid, fechadb, fechacbl, contador_entero, contador_decimal, comentario) VALUES(16,NOW(), 0, 0, 0, '');
+
+CREATE TABLE tbc_PATOLOGIA (
+	Pat_Codi INTEGER,
+	Pat_DescripRedu CHAR(8) NOT NULL,
+	Pat_DescripRedu_2 CHAR(8) NOT NULL,
+	Pat_Modo INTEGER,
+	Pat_CodiEsp INTEGER,
+	Pat_TipInter INTEGER,
+	Pat_8 INTEGER,
+	Pat_Infec INTEGER,
+	Pat_DerivaInter INTEGER,
+	Pat_Score INTEGER,
+	Pat_InterQuiru INTEGER,
+	Pat_EspIntercons_5 INTEGER,
+	Pat_EspIntercons_4 INTEGER,
+	Pat_EspIntercons_3 INTEGER,
+	Pat_EspIntercons_2 INTEGER,
+	Pat_EspIntercons_1 INTEGER,
+	Pat_Est INTEGER,
+	Pat_CodiPatCie INTEGER,
+	Pat_PatAisla INTEGER,
+	Pat_TipLegModi INTEGER,
+	Pat_LegModi INTEGER,
+	Pat_FecModi INTEGER,
+	Pat_MotAisla INTEGER,
+	Pat_Filler CHAR(94) NOT NULL,
+	Pat_Descrip CHAR(30) NOT NULL,
+	CONSTRAINT X_1 PRIMARY KEY (Pat_Codi)
+);
+CREATE INDEX X_2 ON tbc_PATOLOGIA (Pat_DescripRedu);
+CREATE INDEX X_5 ON tbc_PATOLOGIA (Pat_CodiEsp);
+
+INSERT INTO tbc_PATOLOGIA (Pat_Codi, Pat_DescripRedu, Pat_DescripRedu_2, Pat_Modo, Pat_CodiEsp, Pat_TipInter, Pat_8, Pat_Infec, Pat_DerivaInter, Pat_Score, Pat_InterQuiru, Pat_EspIntercons_5, Pat_EspIntercons_4, Pat_EspIntercons_3, Pat_EspIntercons_2, Pat_EspIntercons_1, Pat_Est, Pat_CodiPatCie, Pat_PatAisla, Pat_TipLegModi, Pat_LegModi, Pat_FecModi, Pat_MotAisla, Pat_Filler, Pat_Descrip) 
+VALUES(3264, 'Demanda', 'Demanda', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 'X', 'Demanda espontánea');
