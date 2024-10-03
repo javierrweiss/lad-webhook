@@ -5,7 +5,7 @@
   (:import java.time.LocalDateTime)) 
 
 (defn autenticar-y-autorizar-solicitud
-  [{{:strs [client_id client_secret]} :query-params} env]
+  [{{:strs [client_id client_secret]} :query-params} env] 
   (mulog/log ::autenticando-cliente :fecha (LocalDateTime/now)) 
   (let [conf (read-config (io/resource "config.edn") {:profile env})
         cliente  (:client-id conf) 

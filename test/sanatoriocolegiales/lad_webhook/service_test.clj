@@ -13,17 +13,17 @@
             [sanatoriocolegiales.auxiliares :as aux])
   (:import [org.testcontainers.containers PostgreSQLContainer]))
 
-(use-fixtures :once (ds/system-fixture
+(use-fixtures :each (ds/system-fixture
                      {::ds/defs {:testcontainer {:contenedor #::ds{:start (fn configurar-contenedor
                                                                             [_]
                                                                             (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init.sql"))
                                                                                           :exposed-ports [5432]})
-                                                                                (tc/start!))) 
+                                                                                (tc/start!)))
                                                                    :stop (fn detener-contenedor
                                                                            [{::ds/keys [instance]}]
                                                                            (tc/stop! instance))}
                                                  :conexion #::ds{:start (fn conectar
-                                                                          [{{{:keys [container]} :test-cont} ::ds/config}] 
+                                                                          [{{{:keys [container]} :test-cont} ::ds/config}]
                                                                           (let [opts {:user (.getUsername container)
                                                                                       :password (.getPassword container)}]
                                                                             (jdbc/get-connection (.getJdbcUrl container) opts)))
@@ -51,10 +51,10 @@
                                      :datetime "cualquiera"
                                      :event_object {}}
           request_autenticado_evento_vacio {:event_type "CALL_ENDED"
-                                                :datetime "cualquiera"
-                                                :event_object {}
-                                                :query-params {"client_id" "lad" 
-                                                               "client_secret" "123456"}}
+                                            :datetime "cualquiera"
+                                            :event_object {}
+                                            :query-params {"client_id" "lad"
+                                                           "client_secret" "123456"}}
           request_autenticado_evento_incompleto (assoc request_autenticado_evento_vacio :a 1 :b 2 :c 'ds :d true)
           payload (-> (io/resource "payload_model.edn") slurp edn/read-string)]
       (testing "Cuando recibe evento inesperado del servidor, responde 'Recibido'"
@@ -74,7 +74,9 @@
         (is (== 401 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                 (merge {:body-params {:event_type "CUALQUIERA"
                                                                       :datetime "cualquiera"
-                                                                      :event_object {}}})))))))
+                                                                      :event_object {}}
+                                                        :query-params {"client_id" ""
+                                                                       "client_secret" ""}})))))))
       (testing "Cuando recibe event object vacío, lanza excepción"
         (is (thrown? clojure.lang.ExceptionInfo (guardia/handler sistema request_autenticado_evento_vacio))))
       (testing "Cuando recibe event object vacío, devuelve código 400"
@@ -96,15 +98,15 @@
       (testing "Cuando recibe una solicitud con un paciente no registrado, lanza excepción"
         (is (thrown? clojure.lang.ExceptionInfo (guardia/procesa-atencion payload sistema)))
         (is (= "Paciente no encontrado"  (try (guardia/procesa-atencion payload sistema)
-                                               (catch clojure.lang.ExceptionInfo e (ex-message e))))))
+                                              (catch clojure.lang.ExceptionInfo e (ex-message e))))))
       (testing "Cuando recibe una solicitud con un paciente no registrado, devuelve código 404"
         (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                 (merge {:body-params payload
                                                         :query-params {"client_id" "lad"
                                                                        "client_secret" "123456"}})))))))
       (testing "Cuando recibe solicitud correcta, devuelve estatus 201"
-        (jdbc/execute! (:asistencial sistema) 
-                       (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla") 
+        (jdbc/execute! (:asistencial sistema)
+                       (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla")
                        {:builder-fn rs/as-unqualified-kebab-maps})
         (is (== 201 (:status (guardia/procesa-atencion payload sistema))))))))
 
@@ -140,12 +142,12 @@
                     :medico "Galeno"
                     :matricula 125546}
           _ (println (str "Insertando registro en guardia... "
-                        (jdbc/execute! (:asistencial sistema)
-                                       (aux/sql-insertar-registro-en-guardia 145200 20241002 1256 1 1 "Pepino El Breve" 1820 "4000-A" "1123-AC" "A" "B" "Bla")
-                                       {:builder-fn rs/as-unqualified-kebab-maps})))
-          ejecucion (ingresar-historia-a-sistema sistema paciente)] 
+                          (jdbc/execute! (:asistencial sistema)
+                                         (aux/sql-insertar-registro-en-guardia 145200 20241002 1256 1 1 "Pepino El Breve" 1820 "4000-A" "1123-AC" "A" "B" "Bla")
+                                         {:builder-fn rs/as-unqualified-kebab-maps})))
+          ejecucion (ingresar-historia-a-sistema sistema paciente)]
       (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
-        (is (== (:id ejecucion) (:hc paciente)))) 
+        (is (== (:id ejecucion) (:hc paciente))))
       (let [registro-histpac (jdbc/execute! conn ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-kebab-maps})
             registro-histpac-txt (jdbc/execute! conn ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})
             registro-guardia (jdbc/execute! conn ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 145200"] {:builder-fn rs/as-unqualified-kebab-maps})]
@@ -166,7 +168,7 @@
   (run-test ingreso-registros-db)
   
   (run-test dummy-connection-test)
-  
+   
   (run-test requests)
 
   

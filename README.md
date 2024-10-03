@@ -13,11 +13,11 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
 [X] Está pendiente la definición de al menos una tabla que habría que agregar
 [X]  Hay que filtrar el tipo de evento
 [ ] ~~Faltaría la tabla de tbc_patologia~~
-[] Probar integración con testcontainers
+[X] Probar integración con testcontainers
 [X] Verificar todos los campos que hay que actualizar en tbc_guardia
 [X] Implementar middleware para manejo de excepciones 
 [X] ~~Implementar autenticación por JWT~~ Autenticación tipo OAUTH2
-[] Implementar tests para generación de registros
+[X] Implementar tests para generación de registros
 [X] Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
 [X] Corregir problema de conexión con SQLite usando Hikari
 

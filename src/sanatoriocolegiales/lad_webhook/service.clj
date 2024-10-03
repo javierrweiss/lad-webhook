@@ -15,9 +15,22 @@
   "Gameboard service component lifecycle management"
   (:gen-class)
   (:require 
-   [donut.system :as donut]))
+   [donut.system :as donut]
+   [sanatoriocolegiales.lad-webhook.system :refer [main]]))
 ;; --------------------------------------------------
 ;; Service entry point
+
+(defmethod donut/named-system :prod
+  [_]
+  (donut/system main))
+
+(defmethod donut/named-system :dev 
+  [_]
+  (donut/system main {[:env :app-env] :dev
+                      [:env :app-version] "0.0.0-SNAPSHOT"
+                      [:services :http-server ::donut/config :options :join?] false 
+                      [:services :event-log-publisher ::donut/config]
+                      {:publisher {:type :console :pretty? true}}}))
 
 (defn -main
   "sanatoriocolegiales lad-webhook service managed by donut system,
@@ -37,7 +50,9 @@
 
 (comment
   
-
+  (let [profile :dev]
+    (or (profile :profile) :prod))
+ 
   )
 
 

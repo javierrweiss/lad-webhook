@@ -23,8 +23,8 @@
     nil (throw (ex-info "El objeto no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
     "CALL_ENDED" (procesa-atencion req sys)
     (do (mulog/log ::recepcion-evento-no-esperado :request req :fecha (LocalDateTime/now))
-      (-> (response "Recibido")
-          (assoc :headers {"Content-Type" "text/plain"})))))
+        (-> (response "Recibido")
+            (assoc :headers {"Content-Type" "text/plain"})))))
 
 (defn handler
   [conf req]
@@ -38,8 +38,8 @@
    {:swagger {:tags ["Atenciones de Guardia con servicio LAD"]}
     :post {:summary "Atenciones de teleconsulta en guardia con servicio LAD"
            :description "Procesa las atenciones y genera/actualiza la historia clínica del paciente"
-           :parameters {:query-string {:client_id string?
-                                       :client_secret string?}
+           :parameters {:query {:client_id string?
+                                :client_secret string?}
                         :body {:datetime string?
                                :event_type string?
                                :event_object map?}}

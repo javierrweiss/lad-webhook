@@ -13,8 +13,8 @@
 (defn valida-request
   [req env]
   (mulog/log ::validar-request :fecha (LocalDateTime/now))
-  (if (autenticar-y-autorizar-solicitud req env)
-    (:body-params req)
+  (if (autenticar-y-autorizar-solicitud req env) 
+    (:body-params req) 
     (throw (ex-info "Solicitud no autorizada" {:type :sanatoriocolegiales.lad-webhook.error.error/no-autorizada}))))
 
 (defn valida-event-object

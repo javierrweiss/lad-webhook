@@ -33,6 +33,9 @@
   manifold/manifold {:mvn/version "0.4.3"}
   ;; Time
   clojure.java-time/clojure.java-time {:mvn/version "1.4.2"}
+  ;; Testing
+  com.hyperfiddle/rcf {:mvn/version "20220926-202227"}
+  ring/ring-mock {:mvn/version "0.4.0"}
   ;; System
   aero/aero           {:mvn/version "1.1.6"}
   party.donut/system  {:mvn/version "1.0.254"}
@@ -48,14 +51,12 @@
   ;; ------------
 
   :dev {:extra-paths ["dev" "test"]
-        :extra-deps {djblue/portal {:mvn/version "0.57.0"}
-                     com.hyperfiddle/rcf {:mvn/version "20220926-202227"}
+        :extra-deps {djblue/portal {:mvn/version "0.57.0"} 
                      clj-test-containers/clj-test-containers {:mvn/version "0.7.4"}
                      org.testcontainers/postgresql {:mvn/version "1.20.0"}
                      org.xerial/sqlite-jdbc {:mvn/version "3.46.0.0"}
                      com.github.flow-storm/clojure {:mvn/version "1.11.3-2"}
-                     com.github.flow-storm/flow-storm-dbg {:mvn/version "3.17.1"}
-                     ring/ring-mock {:mvn/version "0.4.0"}}
+                     com.github.flow-storm/flow-storm-dbg {:mvn/version "3.17.1"}}
         :classpath-overrides {org.clojure/clojure nil}
         :jvm-opts ["-Dclojure.storm.instrumentEnable=true"
                    "-Dclojure.storm.instrumentOnlyPrefixes=sanatoriocolegiales.lad-webhook."]}
