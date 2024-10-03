@@ -277,27 +277,27 @@
 
   (let [asistencial (-> (system-repl/system) :donut.system/instances :env :env-conf :db-type :relativity :asistencial)
         desal (-> (system-repl/system) :donut.system/instances :env :env-conf :db-type :postgres :desal)
-        req {:guar-hist-clinica 182222,
+        req {:guar-hist-clinica 9777,
              :patologia "H92",
-             :hora-inicio-atencion 112, 
+             :hora-inicio-atencion 340, 
              :medico "Amezqueta Marcela",
-             :guar-obra 1820,
+             :guar-obra 210,
              :guar-plan "4000",
              :matricula 123456,
-             :hc 182222,
+             :hc 9777,
              :hora-final-atencion 343,
-             :guar-fecha-ingreso 20240808,
+             :guar-fecha-ingreso 20240919,
              :diagnostico "Otalgia y secreción del oído",
              :guar-nroben "",
-             :fecha-inicio-atencion 20240712,
+             :fecha-inicio-atencion 20240919,
              :historia
              "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
-             :nombre "John Doe",
-             :guar-hora-ingreso 1300,
+             :nombre "NEUFELD WALTRUAT MARIA",
+             :guar-hora-ingreso 1642,
              :motivo "Fiebre / Sin otros síntomas mencionados"}
         registros (prepara-registros req)]
-    (tap> (ejecuta! asistencial (actualiza-tbc-guardia (first registros))))
-    (tap> (-> (ejecuta! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 182222"])
+    #_(tap> (ejecuta! asistencial (actualiza-tbc-guardia (first registros))))
+    (tap> (-> (ejecuta! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 9777"])
               first))
     #_(prepara-registros req)
     #_(persiste-historia-clinica! {:asistencial asistencial
