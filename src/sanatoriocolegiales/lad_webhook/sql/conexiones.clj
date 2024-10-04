@@ -16,7 +16,7 @@
 (defn crear-conexion-simple
   [specs]
   (try
-    (mulog/log ::connexion-simple-creada :fecha (LocalDateTime/now) :especificaciones specs)
+    (mulog/log ::conexion-simple-creada :fecha (LocalDateTime/now) :especificaciones specs)
     (jdbc/get-connection specs)
     (catch Exception e (mulog/log ::error-creacion-conexion-simple :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
 

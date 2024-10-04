@@ -58,12 +58,11 @@
 
               :config {:global-context {:app-name "sanatoriocolegiales lad-webhook service"
                                         :version (donut/ref [:env :app-version])
-                                        :environment (donut/ref [:env :app-env])}
-                       ;; Publish events to console in json format
-                       ;; optionally add `:transform` function to filter events before publishing
-                       :publisher {:type :console-json
-                                   :pretty? false
-                                   #_#_:transform identity}}}}
+                                        :environment (donut/ref [:env :app-env])} 
+                       :publisher {:type :simple-file
+                                   :filename "lad_webhook/events.log"
+                                   :transform (fn [sq] 
+                                                (map #(dissoc % :especificaciones :system-config) sq))}}}}
 
     :conexiones 
     {:maestros #::donut{:start (fn iniciar-conexion
