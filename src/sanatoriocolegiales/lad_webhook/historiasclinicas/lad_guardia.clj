@@ -161,8 +161,8 @@
 (defn persiste-historia-clinica!
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
   [db paciente]
-  @(d/let-flow [histpactratam (obtiene-numerador! (.getConnection (:desal db)))
-                histpacmotivo (obtiene-numerador! (.getConnection (:desal db)))
+  @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
+                histpacmotivo (obtiene-numerador! (:desal db))
                 descripcion-patologia (ejecuta! (:maestros db) (busca-en-tbc-patologia 3264))
                 [guardia hc hc-texto] (prepara-registros (assoc paciente 
                                                                 :histpactratam histpactratam 
