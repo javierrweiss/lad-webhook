@@ -50,10 +50,10 @@
                                                   :host "10.200.0.30"
                                                   :port 1583}}}}
  :client-id #profile {:dev "lad" 
-                      :test #ref [:secrets client-id]
-                      :prod #ref [:secrets client-id]}
+                      :test "lad"
+                      :prod #ref [:secrets :client-id]}
  :client-secret #profile {:dev "123456"
-                          :test #ref [:secrets client-secret]
-                          :prod #ref [:secrets client-secret]}
+                          :test "123456"
+                          :prod #ref [:secrets :client-secret]}
  :service-port #profile {:prod #ref [:secrets :port]
                          :dev 2000}}
