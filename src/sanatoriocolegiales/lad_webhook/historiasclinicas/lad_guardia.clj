@@ -27,7 +27,8 @@
            doctor_enrollment_type
            patient_name
            patient_external_id ;; Acá recibimos el número de HC
-           ]}]
+           ] :as req}]
+  #_(print req)
   (let [[fecha hora] (extraer-fecha-y-hora order_id)
         [fecha-ini hora-ini] (extraer-fecha-y-hora call_start_datetime)
         hora-finalizacion (obtener-hora-finalizacion hora-ini call_duration)]
@@ -328,5 +329,5 @@
   (when (throw (ex-info "excepcion boluda" {}))
     1)
   
-  
+  (Integer/parseInt "1234")
   :rcf)

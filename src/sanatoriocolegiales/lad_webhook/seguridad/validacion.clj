@@ -32,11 +32,14 @@
                          :doctor_enrollment_type
                          :patient_name
                          :patient_external_id)
-             obj))]
+             obj))
+          (hc-valida? [hc] (when (string? hc) 
+                             (re-matches #"\d+" hc)))]
     (let [event-object (:event_object body)]
       (cond 
-        (objeto-valido? event-object) event-object
-        :else (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))))))
+        (not (objeto-valido? event-object)) (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
+        (not (hc-valida? (:patient_external_id event-object))) (throw (ex-info "El campo patient_external_id no tiene el formato esperado" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
+        :else event-object))))
 
 (defn valida-paciente
   "Si tiene éxito devuelve un mapa con el registro del paciente, la fecha, la hora y la información necesaria del request.
@@ -158,16 +161,93 @@
                             :call_id "669082f3492f32a38fe8fc37"}}
        req3 {:event_type "CALL_STARTED"
              :datetime "x"
-             :event_object nil}]
+             :event_object nil}
+       req4 {:event_type "CALL_ENDED"
+             :datetime "x"
+             :event_object {:patient_id "12345678",
+                            :doctor_enrollment_prov "C",
+                            :patient_phone "+1234567890",
+                            :call_diagnosis "Otalgia y secreción del oído",
+                            :patient_gender "F",
+                            :call_cie10 "H92",
+                            :call_doctor_rating 0,
+                            :call_motive "Fiebre / Sin otros síntomas mencionados",
+                            :call_patient_comment "",
+                            :call_patient_rating 0,
+                            :patient_email "johndoe@example.com",
+                            :call_start_datetime "2024-07-12T01:12:19.225Z",
+                            :doctor_specialty "Medicina General",
+                            :patient_location_city "",
+                            :rest_indication false,
+                            :call_resolution "referred",
+                            :doctor_enrollment "100016",
+                            :provider_id "64ef63311b7b9a0091cc8934",
+                            :patient_location_longitude -80,
+                            :order_id "2024/08/08 13:00",
+                            :call_doctor_comment
+                            "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
+                            :patient_name "John Doe",
+                            :patient_age 9,
+                            :custom_questions [],
+                            :patient_external_id {:idType "CI",
+                                                  :uid "abcd1234-ef56-7890-gh12-ijklmnopqrst"},
+                            :call_duration 151,
+                            :doctor_enrollment_type "123456",
+                            :doctor_name "Amezqueta Marcela",
+                            :patient_location_latitude 9,
+                            :patient_location_country_code "PA",
+                            :doctor_id "27217651420",
+                            :patient_location_region_code "",
+                            :call_id "669082f3492f32a38fe8fc37"}}
+       req5 {:event_type "CALL_ENDED"
+             :datetime "x"
+             :event_object {:patient_id "12345678",
+                            :doctor_enrollment_prov "C",
+                            :patient_phone "+1234567890",
+                            :call_diagnosis "Otalgia y secreción del oído",
+                            :patient_gender "F",
+                            :call_cie10 "H92",
+                            :call_doctor_rating 0,
+                            :call_motive "Fiebre / Sin otros síntomas mencionados",
+                            :call_patient_comment "",
+                            :call_patient_rating 0,
+                            :patient_email "johndoe@example.com",
+                            :call_start_datetime "2024-07-12T01:12:19.225Z",
+                            :doctor_specialty "Medicina General",
+                            :patient_location_city "",
+                            :rest_indication false,
+                            :call_resolution "referred",
+                            :doctor_enrollment "100016",
+                            :provider_id "64ef63311b7b9a0091cc8934",
+                            :patient_location_longitude -80,
+                            :order_id "2024/08/08 13:00",
+                            :call_doctor_comment
+                            "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
+                            :patient_name "John Doe",
+                            :patient_age 9,
+                            :custom_questions [],
+                            :patient_external_id "abcd1234-ef56-7890-gh12-ijklmnopqrst",
+                            :call_duration 151,
+                            :doctor_enrollment_type "123456",
+                            :doctor_name "Amezqueta Marcela",
+                            :patient_location_latitude 9,
+                            :patient_location_country_code "PA",
+                            :doctor_id "27217651420",
+                            :patient_location_region_code "",
+                            :call_id "669082f3492f32a38fe8fc37"}}]
    (valida-event-object req) := (:event_object req)
    (valida-event-object req2) :throws clojure.lang.ExceptionInfo
-   (valida-event-object req3) :throws clojure.lang.ExceptionInfo)
+   (valida-event-object req3) :throws clojure.lang.ExceptionInfo
+   (valida-event-object req4) :throws clojure.lang.ExceptionInfo
+   (valida-event-object req5) :throws clojure.lang.ExceptionInfo)
 
  :rcf)
 
 
 (comment
 
+  (re-matches #"\d+" "112330a")
+  
   (valida-event-object nil)
 
   (letfn [(objeto-valido? [obj]
