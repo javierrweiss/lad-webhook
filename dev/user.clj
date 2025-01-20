@@ -152,6 +152,8 @@
                          slurp
                          edn/read-string))
 
+  (re-matches #"\d+" "-515")
+
   @(http/post "http://127.0.0.1:2000/lad/historia_clinica_guardia?client_id=lad&client_secret=123456"
               {:headers {"Content-Type" "application/json"}
                :body (json/generate-string {:datetime "2024-07-12T01:17:19.813Z",

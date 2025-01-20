@@ -34,11 +34,13 @@
                          :patient_external_id)
              obj))
           (hc-valida? [hc] (when (string? hc) 
-                             (re-matches #"\d+" hc)))]
+                             (re-matches #"\d+" hc)))
+          (matricula-valida? [matricula] (re-matches #"\d+" matricula))]
     (let [event-object (:event_object body)]
       (cond 
         (not (objeto-valido? event-object)) (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
         (not (hc-valida? (:patient_external_id event-object))) (throw (ex-info "El campo patient_external_id no tiene el formato esperado" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
+        (not (matricula-valida? (:doctor_enrollment_type event-object))) (throw (ex-info "El campo doctor_enrollment_type no tiene el formato esperado" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
         :else event-object))))
 
 (defn valida-paciente
@@ -234,12 +236,20 @@
                             :patient_location_country_code "PA",
                             :doctor_id "27217651420",
                             :patient_location_region_code "",
-                            :call_id "669082f3492f32a38fe8fc37"}}]
+                            :call_id "669082f3492f32a38fe8fc37"}}
+                            req6 (update-in req [:event_object :doctor_enrollment_type] (constantly "MN"))]
+   (str "Validación de un objeto event-object correcto, devuelve el objeto")
    (valida-event-object req) := (:event_object req)
+   (str "Validación de un objeto event-object sin call_diagnosis, lanza excepción")
    (valida-event-object req2) :throws clojure.lang.ExceptionInfo
+   (str "Validación de un objeto event-object con event_object nil, lanza excepción")
    (valida-event-object req3) :throws clojure.lang.ExceptionInfo
+   (str "Validación de un objeto event-object con patient_external_id de tipo objeto, lanza excepción")
    (valida-event-object req4) :throws clojure.lang.ExceptionInfo
-   (valida-event-object req5) :throws clojure.lang.ExceptionInfo)
+   (str "Validación de un objeto event-object con patient_external_id no numérico, lanza excepción")
+   (valida-event-object req5) :throws clojure.lang.ExceptionInfo
+   (str "Validación de un objeto event-object con doctor_enrollment_type no numérico, lanza excepción")
+   (valida-event-object req6) :throws clojure.lang.ExceptionInfo)
 
  :rcf)
 
