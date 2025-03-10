@@ -29,7 +29,7 @@
                          :call_start_datetime
                          :order_id
                          :doctor_name
-                         :doctor_enrollment_type
+                         :doctor_enrollment
                          :patient_name
                          :patient_external_id)
              obj))
@@ -40,7 +40,7 @@
       (cond 
         (not (objeto-valido? event-object)) (throw (ex-info "El objeto event-object no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
         (not (hc-valida? (:patient_external_id event-object))) (throw (ex-info "El campo patient_external_id no tiene el formato esperado" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
-        (not (matricula-valida? (:doctor_enrollment_type event-object))) (throw (ex-info "El campo doctor_enrollment_type no tiene el formato esperado" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
+        (not (matricula-valida? (:doctor_enrollment event-object))) (throw (ex-info "El campo doctor_enrollment no tiene el formato esperado" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
         :else event-object))))
 
 (defn valida-paciente
@@ -119,7 +119,7 @@
                            :custom_questions [],
                            :patient_external_id "182222",
                            :call_duration 151,
-                           :doctor_enrollment_type "123456",
+                           :doctor_enrollment_type "MN",
                            :doctor_name "Amezqueta Marcela",
                            :patient_location_latitude 9,
                            :patient_location_country_code "PA",
@@ -154,7 +154,7 @@
                             :custom_questions [],
                             :patient_external_id "182222",
                             :call_duration 151,
-                            :doctor_enrollment_type "123456",
+                            :doctor_enrollment_type "MN",
                             :doctor_name "Amezqueta Marcela",
                             :patient_location_latitude 9,
                             :patient_location_country_code "PA",
@@ -194,7 +194,7 @@
                             :patient_external_id {:idType "CI",
                                                   :uid "abcd1234-ef56-7890-gh12-ijklmnopqrst"},
                             :call_duration 151,
-                            :doctor_enrollment_type "123456",
+                            :doctor_enrollment_type "MN",
                             :doctor_name "Amezqueta Marcela",
                             :patient_location_latitude 9,
                             :patient_location_country_code "PA",
@@ -230,14 +230,14 @@
                             :custom_questions [],
                             :patient_external_id "abcd1234-ef56-7890-gh12-ijklmnopqrst",
                             :call_duration 151,
-                            :doctor_enrollment_type "123456",
+                            :doctor_enrollment_type "MN",
                             :doctor_name "Amezqueta Marcela",
                             :patient_location_latitude 9,
                             :patient_location_country_code "PA",
                             :doctor_id "27217651420",
                             :patient_location_region_code "",
                             :call_id "669082f3492f32a38fe8fc37"}}
-                            req6 (update-in req [:event_object :doctor_enrollment_type] (constantly "MN"))]
+                            req6 (update-in req [:event_object :doctor_enrollment] (constantly ""))]
    (str "Validación de un objeto event-object correcto, devuelve el objeto")
    (valida-event-object req) := (:event_object req)
    (str "Validación de un objeto event-object sin call_diagnosis, lanza excepción")
@@ -248,7 +248,7 @@
    (valida-event-object req4) :throws clojure.lang.ExceptionInfo
    (str "Validación de un objeto event-object con patient_external_id no numérico, lanza excepción")
    (valida-event-object req5) :throws clojure.lang.ExceptionInfo
-   (str "Validación de un objeto event-object con doctor_enrollment_type no numérico, lanza excepción")
+   (str "Validación de un objeto event-object con doctor_enrollment no numérico, lanza excepción")
    (valida-event-object req6) :throws clojure.lang.ExceptionInfo)
 
  :rcf)

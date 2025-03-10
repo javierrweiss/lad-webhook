@@ -4,7 +4,7 @@ Servicio que consume webhook de LAD para procesamiento de historias clínicas re
 
 ## Project Status
 
-WIP
+Integration Tests
 
 Project created with [deps-new](https://github.com/seancorfield/deps-new) and the [practicalli/service template](https://github.com/practicalli/project-templates)
 

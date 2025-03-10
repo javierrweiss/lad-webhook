@@ -24,7 +24,7 @@
            call_start_datetime
            order_id  ;; Acá recibiremos fecha y hora
            doctor_name
-           doctor_enrollment_type
+           doctor_enrollment
            patient_name
            patient_external_id ;; Acá recibimos el número de HC
            ] :as req}]
@@ -38,7 +38,7 @@
      :hora-inicio-atencion hora-ini
      :hora-final-atencion hora-finalizacion
      :diagnostico call_diagnosis
-     :matricula (Integer/parseInt doctor_enrollment_type)
+     :matricula (Integer/parseInt doctor_enrollment)
      :medico doctor_name
      :motivo call_motive
      :historia call_doctor_comment
