@@ -237,7 +237,41 @@
                             :doctor_id "27217651420",
                             :patient_location_region_code "",
                             :call_id "669082f3492f32a38fe8fc37"}}
-                            req6 (update-in req [:event_object :doctor_enrollment] (constantly ""))]
+       req6 (update-in req [:event_object :doctor_enrollment] (constantly ""))
+       req7 {:datetime "2025-04-03T12:16:59.737Z",
+             :event_type "CALL_ENDED",
+             :event_object
+             {:patient_id "32323388",
+              :doctor_enrollment_prov "C",
+              :patient_phone "+5491167526045",
+              :call_diagnosis "Enfermedad del reflujo gastroesofágico",
+              :patient_gender "M",
+              :call_cie10 "K21",
+              :call_doctor_rating 5,
+              :call_motive #_nil "",
+              :call_patient_comment "",
+              :call_patient_rating 0,
+              :patient_email "ccieri.christian@gmail.com",
+              :call_start_datetime "2025-04-03T12:14:20.424Z",
+              :patient_location_city "Mar del Plata",
+              :rest_indication false,
+              :call_resolution "solved",
+              :doctor_enrollment "123456",
+              :provider_id "5ef21520359c9f0087212b1f",
+              :patient_location_longitude -57.5351,
+              :order_id "144160",
+              :call_doctor_comment "Evolucion ",
+              :patient_name "Christian Cieri",
+              :patient_age 38,
+              :patient_external_id "144160",
+              :call_duration 241,
+              :doctor_enrollment_type "MN",
+              :doctor_name "Núñez Simón",
+              :patient_location_latitude -37.9954,
+              :patient_location_country_code "AR",
+              :doctor_id "23329543129",
+              :patient_location_region_code "B",
+              :call_id "67ee7bb6812ed1489773ed9e"}}]
    (str "Validación de un objeto event-object correcto, devuelve el objeto")
    (valida-event-object req) := (:event_object req)
    (str "Validación de un objeto event-object sin call_diagnosis, lanza excepción")
@@ -249,7 +283,8 @@
    (str "Validación de un objeto event-object con patient_external_id no numérico, lanza excepción")
    (valida-event-object req5) :throws clojure.lang.ExceptionInfo
    (str "Validación de un objeto event-object con doctor_enrollment no numérico, lanza excepción")
-   (valida-event-object req6) :throws clojure.lang.ExceptionInfo)
+   (valida-event-object req6) :throws clojure.lang.ExceptionInfo
+   (valida-event-object req7) := (:event_object req7))
 
  :rcf)
 

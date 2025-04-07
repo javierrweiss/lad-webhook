@@ -1,7 +1,7 @@
 (ns sanatoriocolegiales.lad-webhook.service-test
   (:require [clojure.test :refer [deftest is testing use-fixtures run-test run-all-tests]]
             [donut.system :as ds]
-            [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as guardia]
+            [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as atencion-guardia]
             [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [ingresar-historia-a-sistema]]
             [sanatoriocolegiales.lad-webhook.router :refer [app]]
             [clj-test-containers.core :as tc]
@@ -58,7 +58,7 @@
           request_autenticado_evento_incompleto (assoc request_autenticado_evento_vacio :a 1 :b 2 :c 'ds :d true)
           payload (-> (io/resource "payload_model.edn") slurp edn/read-string)]
       (testing "Cuando recibe evento inesperado del servidor, responde 'Recibido'"
-        (is (= "Recibido" (:body (guardia/procesa-eventos request_evento_x sistema)))))
+        (is (= "Recibido" (:body (atencion-guardia/procesa-eventos request_evento_x sistema)))))
       (testing "Cuando recibe evento inesperado del servidor, devuelve código 200"
         (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                 (merge {:body-params {:event_type "CUALQUIERA"
@@ -67,8 +67,8 @@
                                                         :query-params {"client_id" "lad"
                                                                        "client_secret" "123456"}})))))))
       (testing "Cuando no recibe query string con autorización, lanza excepción <unauthorized>"
-        (is (thrown? clojure.lang.ExceptionInfo (guardia/handler sistema request_evento_incompleto)))
-        (is (= "Solicitud no autorizada"  (try (guardia/handler sistema request_evento_incompleto)
+        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/handler sistema request_evento_incompleto)))
+        (is (= "Solicitud no autorizada"  (try (atencion-guardia/handler sistema request_evento_incompleto)
                                                (catch clojure.lang.ExceptionInfo e (ex-message e))))))
       (testing "Cuando no recibe query string con autorización, devuelve código 401"
         (is (== 401 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
@@ -78,7 +78,7 @@
                                                         :query-params {"client_id" ""
                                                                        "client_secret" ""}})))))))
       (testing "Cuando recibe event object vacío, lanza excepción"
-        (is (thrown? clojure.lang.ExceptionInfo (guardia/handler sistema request_autenticado_evento_vacio))))
+        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/handler sistema request_autenticado_evento_vacio))))
       (testing "Cuando recibe event object vacío, devuelve código 400"
         (is (== 400 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                 (merge {:body-params {:event_type "CALL_ENDED"
@@ -87,7 +87,7 @@
                                                         :query-params {"client_id" "lad"
                                                                        "client_secret" "123456"}})))))))
       (testing "Cuando recibe event object con forma inesperada, lanza excepción"
-        (is (thrown? clojure.lang.ExceptionInfo (guardia/handler sistema request_autenticado_evento_incompleto))))
+        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/handler sistema request_autenticado_evento_incompleto))))
       (testing "Cuando recibe event objecto con forma inesperada, devuelve código 400"
         (is (== 400 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                 (merge {:body-params {:e "C"
@@ -96,8 +96,8 @@
                                                         :query-params {"client_id" "lad"
                                                                        "client_secret" "123456"}})))))))
       (testing "Cuando recibe una solicitud con un paciente no registrado, lanza excepción"
-        (is (thrown? clojure.lang.ExceptionInfo (guardia/procesa-atencion payload sistema)))
-        (is (= "Paciente no encontrado"  (try (guardia/procesa-atencion payload sistema)
+        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/procesa-atencion payload sistema)))
+        (is (= "Paciente no encontrado"  (try (atencion-guardia/procesa-atencion payload sistema)
                                               (catch clojure.lang.ExceptionInfo e (ex-message e))))))
       (testing "Cuando recibe una solicitud con un paciente no registrado, devuelve código 404"
         (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
@@ -108,7 +108,7 @@
         (jdbc/execute! (:asistencial sistema)
                        (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla")
                        {:builder-fn rs/as-unqualified-kebab-maps})
-        (is (== 201 (:status (guardia/procesa-atencion payload sistema))))))))
+        (is (== 201 (:status (atencion-guardia/procesa-atencion payload sistema))))))))
 
 
 (deftest ingreso-registros-db

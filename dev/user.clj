@@ -85,15 +85,14 @@
 ;; Hotload libraries into running REPL
 ;; `deps-*` LSP snippets to add dependency forms
 (comment
-  ;; Require for Clojure 1.11.x and earlier
-  (require '[clojure.tools.deps.alpha.repl :refer [add-libs]])
-  (add-libs '{domain/library-name {:mvn/version "1.0.0"}})
-           
+  (require '[clojure.repl.deps :refer :all])
+  (add-lib '{org.clojure/test.check {:mvn/version "1.1.1"}}) 
+  
   (restart)
   (stop)      
   (start) 
                    
-        
+         
   (tap> (:donut.system/instances (system))) 
   #'system
   ((-> (system) :donut.system/instances :http :handler))
@@ -166,18 +165,18 @@
                                                            :call_cie10 "H92",
                                                            :call_doctor_rating 0,
                                                            :call_motive "Fiebre / Sin otros síntomas mencionados",
-                                                           :call_patient_comment "",
+                                                           :call_patient_comment "sdds",
                                                            :call_patient_rating 0,
                                                            :patient_email "johndoe@example.com",
                                                            :call_start_datetime "2024-07-12T01:12:19.225Z",
                                                            :doctor_specialty "Medicina General",
-                                                           :patient_location_city "",
+                                                           :patient_location_city "A",
                                                            :rest_indication false,
                                                            :call_resolution "referred",
                                                            :doctor_enrollment "100016",
-                                                           :provider_id "64ef63311b7b9a0091cc8934",
-                                                           :patient_location_longitude -80,
-                                                           :order_id "1-31764197940",
+                                                           :provider_id (str (random-uuid)),
+                                                           :patient_location_longitude -80.0,
+                                                           :order_id "2024/08/08 13:00",
                                                            :call_doctor_comment
                                                            "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
                                                            :patient_name "John Doe",
@@ -185,13 +184,13 @@
                                                            :custom_questions [] ,
                                                            :patient_external_id "45652",
                                                            :call_duration 151,
-                                                           :doctor_enrollment_type "124536",
+                                                           :doctor_enrollment_type "MP",
                                                            :doctor_name "Amezqueta Marcela",
-                                                           :patient_location_latitude 9,
+                                                           :patient_location_latitude 9.01,
                                                            :patient_location_country_code "PA",
                                                            :doctor_id "27217651420",
-                                                           :patient_location_region_code "",
-                                                           :call_id "669082f3492f32a38fe8fc37"}})})
+                                                           :patient_location_region_code "D",
+                                                           :call_id (str (random-uuid))}})})
 
   @(http/post "https://lad-webhook-dev.sanatoriocolegiales.com.ar/lad/historia_clinica_guardia?client_id=lad&client_secret=123456"
               {:headers {"Content-Type" "application/json"}

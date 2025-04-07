@@ -201,6 +201,57 @@
    (string? (:nombre obj)) := true
    (number? (:hc obj)) := true
    (string? (:patologia obj)) := true)
+ 
+ (def event-object2 {:datetime "2025-04-03T12:16:59.737Z",
+                     :event_type "CALL_ENDED",
+                     :event_object
+                     {:patient_id "32323388",
+                      :doctor_enrollment_prov "C",
+                      :patient_phone "+5491167526045",
+                      :call_diagnosis "Enfermedad del reflujo gastroesofágico",
+                      :patient_gender "M",
+                      :call_cie10 "K21",
+                      :call_doctor_rating 5,
+                      :call_motive nil,
+                      :call_patient_comment "",
+                      :call_patient_rating 0,
+                      :patient_email "ccieri.christian@gmail.com",
+                      :call_start_datetime "2025-04-03T12:14:20.424Z",
+                      :patient_location_city "Mar del Plata",
+                      :rest_indication false,
+                      :call_resolution "solved",
+                      :doctor_enrollment "123456",
+                      :provider_id "5ef21520359c9f0087212b1f",
+                      :patient_location_longitude -57.5351,
+                      :order_id "144160",
+                      :call_doctor_comment "Evolucion ",
+                      :patient_name "Christian Cieri",
+                      :patient_age 38,
+                      :patient_external_id "144160",
+                      :call_duration 241,
+                      :doctor_enrollment_type "MN",
+                      :doctor_name "Núñez Simón",
+                      :patient_location_latitude -37.9954,
+                      :patient_location_country_code "AR",
+                      :doctor_id "23329543129",
+                      :patient_location_region_code "B",
+                      :call_id "67ee7bb6812ed1489773ed9e"}})
+ 
+ (let [obj (extraer-event-object event-object)]
+   (number? (:fecha obj)) := true
+   (number? (:hora obj)) := true
+   (number? (:fecha-inicio-atencion obj)) := true
+   (number? (:hora-inicio-atencion obj)) := true
+   (number? (:hora-final-atencion obj)) := true
+   (string? (:diagnostico obj)) := true
+   (number? (:matricula obj)) := true
+   (string? (:medico obj)) := true
+   (string? (:motivo obj)) := true
+   (string? (:historia obj)) := true
+   (string? (:nombre obj)) := true
+   (number? (:hc obj)) := true
+   (string? (:patologia obj)) := true)
+
 
  "Cuando se recibe request y registro de guardia de paciente, se crean tres registros con el tamaño y los tipos de datos adecuados..."
 

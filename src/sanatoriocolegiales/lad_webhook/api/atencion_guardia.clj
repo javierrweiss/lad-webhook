@@ -5,7 +5,8 @@
    [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [ingresar-historia-a-sistema extraer-event-object]]
    [fmnoise.flow :as flow :refer [then]]
    [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request valida-event-object]]
-   [com.brunobonacci.mulog :as mulog])
+   [com.brunobonacci.mulog :as mulog]
+   [sanatoriocolegiales.lad-webhook.especificaciones.especificaciones :as especificaciones])
   (:import java.time.LocalDateTime))
 
 (defn procesa-atencion
@@ -40,9 +41,9 @@
            :description "Procesa las atenciones y genera/actualiza la historia clínica del paciente"
            :parameters {:query {:client_id string?
                                 :client_secret string?}
-                        :body {:datetime string?
+                        :body #_{:datetime string?
                                :event_type string?
-                               :event_object map?}}
+                               :event_object map?} :message/message}
            :handler (partial handler system-config)}}])
 
 
