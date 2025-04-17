@@ -36,8 +36,8 @@
                                      (inst? (try 
                                               (Instant/parse d)
                                               (catch DateTimeParseException e false)))
-                                     (inst? d)))
-                    #(spec/gen (conj #{} (Instant/now)))))
+                                     false))
+                    #(spec/gen (conj #{} (.toString (Instant/now))))))
 
 (def custom-date-spec (spec/with-gen (spec/and string? #(re-matches #"\d{4}(/|-)\d{2}(/|-)\d{2} \d{2}:\d{2}" %))
                        #(spec/gen #{(-> (LocalDateTime/now)
@@ -234,9 +234,14 @@
 
 
 (tests
- (->> (java.time.Instant/parse "2025-04-03T12:16:59.737Z")
-      (spec/valid? ::datetime)) := true
+ 
+ (spec/valid? ::call_start_datetime "2025-04-03T12:16:59.737Z") := true
 
+ (spec/valid? ::call_start_datetime (java.time.Instant/now)) := false 
+ 
+ (->> (java.time.Instant/parse "2025-04-03T12:16:59.737Z")
+      (spec/valid? ::datetime)) := false
+ 
  (spec/valid? ::datetime "2024-07-12T01:17:19.813Z") := true
 
  (spec/valid? ::datetime "2024-07-12") := false
@@ -325,7 +330,7 @@
 
  (spec/valid? ::order_id "2024/02/05 10/45") := false
 
- (spec/valid? :message/message {:datetime (Instant/now)
+ (spec/valid? :message/message {:datetime (str (Instant/now))
                                 :event_type "PRESCRIPTION"
                                 :event_object {:call_id (str (random-uuid))
                                                :doctor_id "64564564"
@@ -346,7 +351,7 @@
                                                :patient_external_id "16546456"
                                                :provider_id (str (random-uuid))}}) := true
  (spec/valid? :message/message
-              {:datetime (Instant/now)
+              {:datetime (str (Instant/now))
                :event_type "PRACTICES"
                :event_object {:call_id (str (random-uuid)),
                               :doctor_id "65654",
@@ -357,14 +362,14 @@
                               :provider_id (str (random-uuid))}}) := true
 
 
- (spec/valid? :message/message {:datetime (java.time.Instant/now)
+ (spec/valid? :message/message {:datetime (.toString (java.time.Instant/now))
                                 :event_type "COULD_NOT_CONTACT"
                                 :event_object {:patient_id "12121"
                                                :provider_id (str (random-uuid))
                                                :patient_external_id "455656"
                                                :order_id "2024-01-19 11:23"}}) := true
 
- (spec/valid? :message/message {:datetime (java.time.Instant/now)
+ (spec/valid? :message/message {:datetime (str (java.time.Instant/now))
                                 :event_type "CASE_CLOSED"
                                 :event_object {:order_id "2025/08/25 18:56",
                                                :patient_external_id "14565",
@@ -372,7 +377,7 @@
                                                :provider_id (str (random-uuid))}}) := true
 
  (spec/valid? :message/message
-              {:datetime (java.time.Instant/now)
+              {:datetime (str (java.time.Instant/now))
                :event_type "APPOINTMENT_CREATED"
                :event_object {:patient {:name "Juan Monn"
                                         :document_number "45454"}
@@ -387,7 +392,7 @@
                               :user "Chan Gil"}}) := true
 
  (spec/valid? :message/message
-              {:datetime (java.time.Instant/now)
+              {:datetime (str (java.time.Instant/now))
                :event_type "APPOINTMENT_CANCELLED"
                :event_object {:patient {:name "Juan Monn"
                                         :document_number "45454"}
