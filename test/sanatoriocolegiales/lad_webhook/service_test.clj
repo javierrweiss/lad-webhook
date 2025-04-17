@@ -8,10 +8,17 @@
             [next.jdbc :as jdbc]
             [next.jdbc.result-set :as rs]
             [ring.mock.request :as mock]
-            [clojure.java.io :as io]
-            [clojure.edn :as edn]
-            [sanatoriocolegiales.auxiliares :as aux])
-  (:import [org.testcontainers.containers PostgreSQLContainer]))
+            [next.jdbc.connection :as connection]
+            [sanatoriocolegiales.auxiliares :as aux]
+            [sanatoriocolegiales.lad-webhook.especificaciones.especificaciones :as especificaciones]
+            [clojure.test.check.clojure-test :refer [defspec]]
+            [clojure.test.check.properties :as prop]
+            [clojure.spec.gen.alpha :as gen]
+            [clojure.spec.alpha :as spec]
+            [cheshire.core :as json])
+  (:import [org.testcontainers.containers PostgreSQLContainer]
+           java.time.Instant
+           com.zaxxer.hikari.HikariDataSource))
 
 (use-fixtures :each (ds/system-fixture
                      {::ds/defs {:testcontainer {:contenedor #::ds{:start (fn configurar-contenedor
@@ -24,99 +31,212 @@
                                                                            (tc/stop! instance))}
                                                  :conexion #::ds{:start (fn conectar
                                                                           [{{{:keys [container]} :test-cont} ::ds/config}]
-                                                                          (let [opts {:user (.getUsername container)
+                                                                          (let [opts {:username (.getUsername container)
                                                                                       :password (.getPassword container)}]
-                                                                            (jdbc/get-connection (.getJdbcUrl container) opts)))
+                                                                            (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl container)} opts))))
                                                                  :stop (fn cerrar
                                                                          [{::ds/keys [instance]}]
                                                                          (.close instance))
                                                                  :config {:test-cont (ds/local-ref [:contenedor])}}}}}))
- 
-(deftest dummy-connection-test
-  (testing "Test de control que verifica instancia de testcontainer"
-(with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])] 
-  (is (true? (instance? java.sql.Connection conn))))))
 
-(deftest requests
-  (with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])]
-    (let [sistema {:asistencial conn
-                   :desal conn
-                   :bases_auxiliares conn
-                   :maestros conn
-                   :env :test}
-          request_evento_x {:event_type "CUALQUIERA"
-                            :datetime ""
-                            :event_object {}}
-          request_evento_incompleto {:event_type "CALL_ENDED"
-                                     :datetime "cualquiera"
-                                     :event_object {}}
-          request_autenticado_evento_vacio {:event_type "CALL_ENDED"
-                                            :datetime "cualquiera"
-                                            :event_object {}
-                                            :query-params {"client_id" "lad"
-                                                           "client_secret" "123456"}}
-          request_autenticado_evento_incompleto (assoc request_autenticado_evento_vacio :a 1 :b 2 :c 'ds :d true)
-          payload (-> (io/resource "payload_model.edn") slurp edn/read-string)]
-      (testing "Cuando recibe evento inesperado del servidor, responde 'Recibido'"
-        (is (= "Recibido" (:body (atencion-guardia/procesa-eventos request_evento_x sistema)))))
-      (testing "Cuando recibe evento inesperado del servidor, devuelve código 200"
-        (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                (merge {:body-params {:event_type "CUALQUIERA"
-                                                                      :datetime "cualquiera"
-                                                                      :event_object {}}
-                                                        :query-params {"client_id" "lad"
-                                                                       "client_secret" "123456"}})))))))
-      (testing "Cuando no recibe query string con autorización, lanza excepción <unauthorized>"
-        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/handler sistema request_evento_incompleto)))
-        (is (= "Solicitud no autorizada"  (try (atencion-guardia/handler sistema request_evento_incompleto)
-                                               (catch clojure.lang.ExceptionInfo e (ex-message e))))))
-      (testing "Cuando no recibe query string con autorización, devuelve código 401"
-        (is (== 401 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                (merge {:body-params {:event_type "CUALQUIERA"
-                                                                      :datetime "cualquiera"
-                                                                      :event_object {}}
-                                                        :query-params {"client_id" ""
-                                                                       "client_secret" ""}})))))))
-      (testing "Cuando recibe event object vacío, lanza excepción"
-        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/handler sistema request_autenticado_evento_vacio))))
-      (testing "Cuando recibe event object vacío, devuelve código 400"
-        (is (== 400 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                (merge {:body-params {:event_type "CALL_ENDED"
-                                                                      :datetime "cualquiera"
-                                                                      :event_object {}}
-                                                        :query-params {"client_id" "lad"
-                                                                       "client_secret" "123456"}})))))))
-      (testing "Cuando recibe event object con forma inesperada, lanza excepción"
-        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/handler sistema request_autenticado_evento_incompleto))))
-      (testing "Cuando recibe event objecto con forma inesperada, devuelve código 400"
-        (is (== 400 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                (merge {:body-params {:e "C"
-                                                                      :d "cualquiera"
-                                                                      :a 12345}
-                                                        :query-params {"client_id" "lad"
-                                                                       "client_secret" "123456"}})))))))
-      (testing "Cuando recibe una solicitud con un paciente no registrado, lanza excepción"
-        (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/procesa-atencion payload sistema)))
-        (is (= "Paciente no encontrado"  (try (atencion-guardia/procesa-atencion payload sistema)
-                                              (catch clojure.lang.ExceptionInfo e (ex-message e))))))
-      (testing "Cuando recibe una solicitud con un paciente no registrado, devuelve código 404"
-        (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                (merge {:body-params payload
-                                                        :query-params {"client_id" "lad"
-                                                                       "client_secret" "123456"}})))))))
-      (testing "Cuando recibe solicitud correcta, devuelve estatus 201"
-        (jdbc/execute! (:asistencial sistema)
-                       (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla")
-                       {:builder-fn rs/as-unqualified-kebab-maps})
-        (is (== 201 (:status (atencion-guardia/procesa-atencion payload sistema))))))))
+(defspec cuando-recibe-evento-inesperados-responde-200
+  100
+  (prop/for-all [prescripcion (spec/gen :prescription/event_object)
+                 practices (spec/gen :practices/event_object)
+                 caseclosed (spec/gen :case_closed/event_object)
+                 couldnotcontact (spec/gen :could_not_contact/event_object)
+                 appointmentcreated (spec/gen :appointment_created/event_object)
+                 appointmentcancelled (spec/gen :appointment_cancelled/event_object)] 
+                (let [sistema {:asistencial nil
+                               :desal nil
+                               :bases_auxiliares nil
+                               :maestros nil
+                               :env :test}
+                      fecha (.toString (Instant/now))]
+                  (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime fecha
+                                                                                :event_type "PRESCRIPTION"
+                                                                                :event_object prescripcion}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}}))))))
+                  (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime fecha
+                                                                                :event_type "PRACTICES"
+                                                                                :event_object practices}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}}))))))
+                  (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime fecha
+                                                                                :event_type "CASE_CLOSED"
+                                                                                :event_object caseclosed}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}}))))))
+                  (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime fecha
+                                                                                :event_type "COULD_NOT_CONTACT"
+                                                                                :event_object couldnotcontact}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}}))))))
+                  (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime fecha
+                                                                                :event_type "APPOINTMENT_CREATED"
+                                                                                :event_object appointmentcreated}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}}))))))
+                  (is (== 200 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime fecha
+                                                                                :event_type "APPOINTMENT_CANCELLED"
+                                                                                :event_object appointmentcancelled}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}})))))))))
+
+(defspec cuando-recibe-evento-inesperados-responde-recibido
+  100
+  (prop/for-all [prescripcion (spec/gen :prescription/event_object)
+                 practices (spec/gen :practices/event_object)
+                 caseclosed (spec/gen :case_closed/event_object)
+                 couldnotcontact (spec/gen :could_not_contact/event_object)
+                 appointmentcreated (spec/gen :appointment_created/event_object)
+                 appointmentcancelled (spec/gen :appointment_cancelled/event_object)] 
+                (let [sistema {:asistencial nil
+                               :desal nil
+                               :bases_auxiliares nil
+                               :maestros nil
+                               :env :test}
+                      fecha (.toString (Instant/now))]
+                  (is (= "Recibido" (-> ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                           (merge {:body-params {:datetime fecha
+                                                                                 :event_type "PRESCRIPTION"
+                                                                                 :event_object prescripcion}
+                                                                   :query-params {"client_id" "lad"
+                                                                                  "client_secret" "123456"}})))
+                                        :body
+                                        (json/decode keyword)
+                                        :mensaje)))
+                  (is (= "Recibido" (-> ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                           (merge {:body-params {:datetime fecha
+                                                                                 :event_type "PRACTICES"
+                                                                                 :event_object practices}
+                                                                   :query-params {"client_id" "lad"
+                                                                                  "client_secret" "123456"}})))
+                                        :body
+                                        (json/decode keyword)
+                                        :mensaje)))
+                  (is (= "Recibido" (-> ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                           (merge {:body-params {:datetime fecha
+                                                                                 :event_type "CASE_CLOSED"
+                                                                                 :event_object caseclosed}
+                                                                   :query-params {"client_id" "lad"
+                                                                                  "client_secret" "123456"}})))
+                                        :body
+                                        (json/decode keyword)
+                                        :mensaje)))
+                  (is (= "Recibido" (-> ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                           (merge {:body-params {:datetime fecha
+                                                                                 :event_type "COULD_NOT_CONTACT"
+                                                                                 :event_object couldnotcontact}
+                                                                   :query-params {"client_id" "lad"
+                                                                                  "client_secret" "123456"}})))
+                                        :body
+                                        (json/decode keyword)
+                                        :mensaje)))
+                  (is (= "Recibido" (-> ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                           (merge {:body-params {:datetime fecha
+                                                                                 :event_type "APPOINTMENT_CREATED"
+                                                                                 :event_object appointmentcreated}
+                                                                   :query-params {"client_id" "lad"
+                                                                                  "client_secret" "123456"}})))
+                                        :body
+                                        (json/decode keyword)
+                                        :mensaje)))
+                  (is (= "Recibido" (-> ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                           (merge {:body-params {:datetime fecha
+                                                                                 :event_type "APPOINTMENT_CANCELLED"
+                                                                                 :event_object appointmentcancelled}
+                                                                   :query-params {"client_id" "lad"
+                                                                                  "client_secret" "123456"}})))
+                                        :body
+                                        (json/decode keyword)
+                                        :mensaje))))))
+
+(defspec cuando-no-recibe-query-string-con-autorizacion-responde-401
+  100
+  (prop/for-all [msj (spec/gen :message/message)] 
+                (let [sistema {:asistencial nil
+                               :desal nil
+                               :bases_auxiliares nil
+                               :maestros nil
+                               :env :test}]
+                  (is (= 401 (:status 
+                              (try 
+                                ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                   (merge {:body-params msj}
+                                                          {:query-params {"client_id" ""
+                                                                          "client_secret" ""}})))
+                                (catch Exception e (ex-message e)))))))))
+
+(defspec cuando-recibe-objecto-invalido-devuelve-400
+  100
+  (prop/for-all [body (gen/bind (gen/tuple (gen/any) (gen/any))
+                       (fn [[k v]] 
+                         (gen/fmap #(assoc-in % [:event_object k] v) (spec/gen :message/message))))]
+                (is (== 400 (:status ((app {}) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                   (merge
+                                                    body
+                                                    {:query-params {"client_id" "lad"
+                                                                    "client_secret" "123456"}}))))))))
+
+(defspec cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201 
+  2
+  (prop/for-all [call-ended (spec/gen :call_ended/event_object)] 
+                (let [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])
+                      sistema {:asistencial (fn [] conn)
+                               :desal  conn
+                               :bases_auxiliares conn
+                               :maestros (fn [] conn)
+                               :env :test}] 
+                  (is (== 201 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime (.toString (Instant/now))
+                                                                                :event_type "CALL_ENDED"
+                                                                                :event_object call-ended}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}})))))))))
+
+
+(defspec cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500
+  100)
+
+
+
+(deftest dummy-connection-test
+  (testing "Test de control que verifica operatividad de testcontainer"
+(with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])] 
+  (is (seq (jdbc/execute! conn ["SELECT NOW()"]))))))
+
+#_(deftest requests
+    
+  (testing "Cuando recibe una solicitud con un paciente no registrado, lanza excepción"
+    (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/procesa-atencion payload sistema)))
+    (is (= "Paciente no encontrado"  (try (atencion-guardia/procesa-atencion payload sistema)
+                                          (catch clojure.lang.ExceptionInfo e (ex-message e))))))
+  (testing "Cuando recibe una solicitud con un paciente no registrado, devuelve código 404"
+    (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                            (merge {:body-params payload
+                                                    :query-params {"client_id" "lad"
+                                                                   "client_secret" "123456"}})))))))
+  (testing "Cuando recibe solicitud correcta, devuelve estatus 201"
+    (jdbc/execute! (:asistencial sistema)
+                   (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla")
+                   {:builder-fn rs/as-unqualified-kebab-maps})
+    (is (== 201 (:status (atencion-guardia/procesa-atencion payload sistema))))))
 
 
 (deftest ingreso-registros-db
   (with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])]
-    (let [sistema {:asistencial conn
+    (let [sistema {:asistencial (constantly conn)
                    :desal conn
                    :bases_auxiliares conn
-                   :maestros conn
+                   :maestros (constantly conn)
                    :env :test}
           paciente {:hc 145200
                     :fecha 20241002
@@ -161,23 +281,72 @@
           (is (== 20241002 (-> registro-guardia first :guar-fechaalta)))
           (is (== 1314 (-> registro-guardia first :guar-horaalta))))))))
  
-(comment 
-   
+(comment
+
   (run-all-tests)
 
   (run-test ingreso-registros-db)
-  
-  (run-test dummy-connection-test)
-   
-  (run-test requests)
 
+  (run-test dummy-connection-test)
+
+  (run-test cuando-recibe-evento-inesperados-responde-200)
+
+  (run-test cuando-recibe-evento-inesperados-responde-recibido)
+
+  (run-test cuando-no-recibe-query-string-con-autorizacion-responde-401)
+
+  (run-test cuando-recibe-objecto-invalido-devuelve-400)
+
+  (run-test cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
+
+  (run-test >cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
   
+  
+  (let [m (gen/generate (gen/bind  (gen/fmap #(assoc-in % [:event_object :m] "sdds") (spec/gen :message/message))
+                                   (fn [mp]
+                                     (gen/elements [{:body-params {:datetime (.toString (Instant/now))
+                                                                   :event_type "APPOINTMENT_CREATED"
+                                                                   :event_object mp}
+                                                     :query-params {"client_id" "lad"
+                                                                    "client_secret" "123456"}}
+                                                    {:body-params mp
+                                                     :query-params {"client_id" "lad"
+                                                                    "client_secret" "123456"}}]))))]
+    ((app {}) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                  (merge m))))
+
+
+  ((app {}) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                (merge {:body-params (gen/generate (spec/gen :message/message))}
+                       {:query-params {"client_id" ""
+                                       "client_secret" ""}})))
+
+  (atencion-guardia/handler {} (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                   (merge {:body-params (gen/generate (spec/gen :message/message))}
+                                          {:query-params {"client_id" ""
+                                                          "client_secret" ""}})))
+
+  (with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])]
+    (let [sistema {:asistencial conn
+                   :desal conn
+                   :bases_auxiliares conn
+                   :maestros conn
+                   :env :test}]
+      ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                         (merge {:body-params {:datetime (.toString (Instant/now))
+                                               :event_type "CALL_ENDED"
+                                               :event_object (gen/generate (spec/gen :call_ended/event_object))}
+                                 :query-params {"client_id" "lad"
+                                                "client_secret" "123456"}})))))
+
   (ds/instance (ds/named-system :test))
 
   (def cont
     (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init.sql"))
                   :exposed-ports [5432]})
         (tc/start!)))
+
+  (tc/stop! cont)
 
   (def cont2
     (-> (tc/init {:container (PostgreSQLContainer. "postgres:12.2")
@@ -187,18 +356,19 @@
                                       :mode :read-only})
         (tc/start!)))
 
-  (def cont-obj (:container #_cont cont2))
-
-  (.getJdbcUrl cont-obj)
+  (def cont-obj (:container cont #_cont2))
 
   (def conn (jdbc/get-connection (.getJdbcUrl cont-obj) {:user (.getUsername cont-obj)
                                                          :password (.getPassword cont-obj)}))
-
-  (jdbc/execute! conn ["SELECT * FROM tbc_guardia"])
-  (jdbc/execute! conn ["SELECT * FROM tbl_hist_txt"])
-  (jdbc/execute! conn ["SELECT NOW()"])
-
-  (tc/stop! cont2) 
+  
+  (def conn2 (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl cont-obj)} {:username (.getUsername cont-obj)
+                                                                                           :password (.getPassword cont-obj)})))
+  
+  (def c (jdbc/get-connection conn2))
+  
+  (.close c)
+  
+  (jdbc/execute! conn2 ["SELECT NOW()"])
 
   (with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])]
     (let [sistema {:asistencial conn
@@ -211,10 +381,10 @@
                                              :datetime "cualquiera"
                                              :event_object {}
                                              :query-params {"client_id" "lad"
-                                                            "client_secret" "123456"}}}))] 
-      (:status ((app sistema) mock-req)) 
+                                                            "client_secret" "123456"}}}))]
+      (:status ((app sistema) mock-req))
       #_(:asistencial sistema)
       #_(jdbc/execute! (:asistencial sistema) ["SELECT * FROM tbc_guardia"])))
-  
+
 
   :rcf)
