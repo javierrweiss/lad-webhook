@@ -45,68 +45,6 @@ CREATE INDEX X_7_8_9 ON tbc_histpac (HistpacEspfir,HistpacNro1,HistpacFec1);
 CREATE INDEX X_8_9 ON tbc_histpac (HistpacNro1,HistpacFec1);
 CREATE INDEX X_A_B ON tbc_histpac (HistpacNro2,HistpacEspfir1);
 
-CREATE TABLE tbc_guardia (
-	Guar_HistClinica DECIMAL(10,0) NOT NULL,
-	Guar_FechaIngreso INTEGER NOT NULL,
-	Guar_HoraIngreso INTEGER NOT NULL,
-	Guar_Especialidad INTEGER NOT NULL,
-	Guar_Estado INTEGER NOT NULL,
-	Guar_Fecha_Ingreso INTEGER NOT NULL,  -- Difiere del original para poder resolver discordancia con el modo en el que next.jdbc traduce los campos en tablas relativity y postgres
-	Guar_Hora_Ingreso INTEGER NOT NULL,   -- Difiere del original para poder resolver discordancia con el modo en el que next.jdbc traduce los campos en tablas relativity y postgres
-	Guar_Hist_Clinica DECIMAL(10,0) NOT NULL,  -- Difiere del original para poder resolver discordancia con el modo en el que next.jdbc traduce los campos en tablas relativity y postgres
-	Guar_Especialidad1 INTEGER NOT NULL,
-	Guar_Estado1 INTEGER NOT NULL,
-	Guar_FechaIngreso3 INTEGER NOT NULL,
-	Guar_HoraIngreso3 INTEGER NOT NULL,
-	Guar_Especialidad3 INTEGER NOT NULL,
-	Guar_Estado3 INTEGER NOT NULL,
-	Guar_ApeNom CHAR(35) NOT NULL,
-	Guar_Obra INTEGER,
-	Guar_Plan CHAR(10) NOT NULL,
-	Guar_Nroben CHAR(15) NOT NULL,
-	Guar_Medico INTEGER,
-	Guar_TipoMed INTEGER,
-	Guar_Diagnostico INTEGER,
-	Guar_FechaAlta INTEGER,
-	Guar_HoraAlta INTEGER,
-	Guar_Turno INTEGER,
-	Guar_PrimeraVez INTEGER,
-	Guar_EspMed INTEGER,
-	Guar_HoraAtenc INTEGER,
-	Guar_LetraFc CHAR(1) NOT NULL,
-	Guar_NumeFc INTEGER,
-	Guar_TipoOperador INTEGER,
-	Guar_Operador INTEGER,
-	Guar_Deriva INTEGER,
-	Guar_DerivaSec INTEGER,
-	Guar_Habita INTEGER,
-	Guar_Cama CHAR(1) NOT NULL,
-	Guar_Pamifup INTEGER,
-	Guar_Anestesia INTEGER,
-	Guar_Ctro INTEGER,
-	Guar_Reingreso INTEGER,
-	Guar_FechaCama INTEGER,
-	Guar_HoraCama INTEGER,
-	Guar_FechaEpic INTEGER,
-	Guar_MenorAcom INTEGER,
-	Guar_OpeTipReingreso INTEGER,
-	Guar_OpeLegReingreso INTEGER,
-	Guar_OpeTipCama INTEGER,
-	Guar_OpeLegCama INTEGER,
-	Guar_EstadoFebril INTEGER,
-	Guar_QuienAnula INTEGER,
-	Guar_OtrCtro INTEGER,
-	GuarIva INTEGER,
-	GuarPresuFac INTEGER,
-	GuarNivel INTEGER,
-	GuarMedicab CHAR(7) NOT NULL,
-	GuarNropres INTEGER,
-	CONSTRAINT X_1_2_3 PRIMARY KEY (Guar_Hist_Clinica,Guar_Fecha_Ingreso,Guar_Hora_Ingreso)
-);
-CREATE INDEX X_4_5_6_7 ON tbc_guardia (Guar_Especialidad,Guar_Estado,Guar_Fecha_Ingreso,Guar_Hora_Ingreso);
-CREATE INDEX X_8_9_A ON tbc_guardia (Guar_Hist_Clinica,Guar_Especialidad1,Guar_Estado1);
-CREATE INDEX X_B_C_D_E ON tbc_guardia (Guar_FechaIngreso3,Guar_HoraIngreso3,Guar_Especialidad3,Guar_Estado3);
-
 CREATE TABLE IF NOT EXISTS tbc_histpac_txt (
 	Txt1 DECIMAL(10,0) NOT NULL,
 	Txt1g INTEGER NOT NULL,
