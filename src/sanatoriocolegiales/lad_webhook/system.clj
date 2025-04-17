@@ -67,11 +67,12 @@
     :conexiones 
     {:maestros #::donut{:start (fn iniciar-conexion
                                  [{{:keys [specs]} ::donut/config}] 
-                                 (crear-conexion-simple specs))
+                                 (partial crear-conexion-simple specs))
                
                         :stop (fn detener-conexion
                                 [{::donut/keys [instance]}]
-                                (cerrar instance))
+                                (when-not (fn? instance)
+                                  (cerrar instance)))
                
                         :config {:specs (donut/ref [:env :env-conf :db-type :relativity :maestros])}}
      :desal #::donut{:start (fn iniciar-conexion
@@ -85,11 +86,12 @@
                      :config {:specs (donut/ref [:env :env-conf :db-type :postgres :desal])}}
      :asistencial #::donut{:start (fn iniciar-conexion
                                     [{{:keys [specs]} ::donut/config}]
-                                    (crear-conexion-simple specs))
+                                    (partial crear-conexion-simple specs))
                   
                            :stop (fn detener-conexion
                                    [{::donut/keys [instance]}]
-                                   (cerrar instance))
+                                   (when-not (fn? instance) 
+                                     (cerrar instance)))
                   
                            :config {:specs (donut/ref [:env :env-conf :db-type :relativity :asistencial])}}
      :bases_auxiliares #::donut{:start (fn iniciar-conexion

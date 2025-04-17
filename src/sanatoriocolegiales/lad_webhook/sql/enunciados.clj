@@ -70,7 +70,7 @@
                          :diagnostico
                          :motivo]
                :values [values]}))
-
+;; Eliminar
 (defn actualiza-tbc-guardia
   [[histclinica fecha hora diagnostico hora-atencion fecha-atencion]]
   (sql/format {:update :tbc_guardia
@@ -82,7 +82,7 @@
                        [:= :guar_histclinica histclinica] 
                        [:= :guar_fechaingreso fecha] 
                        [:= :guar_horaingreso hora]]}))
-
+;; Eliminar
 (defn selecciona-guardia
   [histclinica fecha hora]
   (sql/format {:select [:*] #_[:guar_histclinica :guar_fechaingreso :guar_horaingreso :guar_obra :guar_plan :guar_nroben]

@@ -1,24 +1,33 @@
 (ns sanatoriocolegiales.lad-webhook.sql.conexiones
   (:require [next.jdbc.connection :as connection]
             [next.jdbc :as jdbc]
-            [com.brunobonacci.mulog :as mulog])
+            [com.brunobonacci.mulog :as mulog]
+            [com.potetm.fusebox.timeout :as to])
   (:import com.zaxxer.hikari.HikariDataSource
            java.sql.Connection 
            java.time.LocalDateTime))
+
+(def timeout
+  (to/init {::to/timeout-ms 1000}))
 
 (defn crear-connection-pool ^HikariDataSource
   [specs]
   (try
     (mulog/log ::connection-pool-creada :fecha (LocalDateTime/now) :especificaciones specs)
     (connection/->pool HikariDataSource specs)
-    (catch Exception e (mulog/log ::error-creacion-connection-pool :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
+    (catch Exception e (do 
+                         (mulog/log ::error-creacion-connection-pool :fecha (LocalDateTime/now) :mensaje (ex-message e))
+                         (throw (ex-info "Excepción en en Hikari" {:mensaje (ex-message e)}))))))
 
 (defn crear-conexion-simple
   [specs]
   (try
-    (mulog/log ::conexion-simple-creada :fecha (LocalDateTime/now) :especificaciones specs)
-    (jdbc/get-connection specs)
-    (catch Exception e (mulog/log ::error-creacion-conexion-simple :fecha (LocalDateTime/now) :mensaje (ex-message e)))))
+    (to/with-timeout timeout
+      (mulog/log ::conexion-simple-creada :fecha (LocalDateTime/now) :especificaciones specs)
+      (jdbc/get-connection specs))
+    (catch Exception e (do 
+                         (mulog/log ::error-creacion-conexion-simple :fecha (LocalDateTime/now) :mensaje (ex-message e))
+                         (throw (ex-info "Excepción en Relativity" {:mensaje (ex-message e)}))))))
 
 (defprotocol Cerrar-conexion
   (cerrar [this]))
@@ -30,6 +39,20 @@
   (cerrar [this] (.close this))
   Connection
   (cerrar [this] (.close this)))
+
+(defprotocol Devolver-conexion
+  (devolver [this]))
+
+(extend-protocol Devolver-conexion
+  nil
+  (devolver [this] nil) 
+
+  HikariDataSource
+  (devolver [this] this) 
+
+  Connection
+  (devolver [this] (.close this))) 
+
 
 
 (comment 
