@@ -50,4 +50,3 @@ resources/config.edn
 !figwheel-main.edn
 !*.cljs.edn
 
-resources/config.edn
