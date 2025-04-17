@@ -164,12 +164,12 @@
   [db paciente]
   @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
                 histpacmotivo (obtiene-numerador! (:desal db))
-                descripcion-patologia (ejecuta! (:maestros db) (busca-en-tbc-patologia 3264))
+                descripcion-patologia (ejecuta! ((:maestros db)) (busca-en-tbc-patologia 3264))
                 [guardia hc hc-texto] (prepara-registros (assoc paciente 
                                                                 :histpactratam histpactratam 
                                                                 :histpacmotivo histpacmotivo
                                                                 :descripcion-patologia (-> descripcion-patologia first :pat-descrip)))]
-               (-> (crea-historia-clinica! (:asistencial db) guardia hc hc-texto)
+               (-> (crea-historia-clinica! ((:asistencial db)) guardia hc hc-texto)
                    (d/catch Exception #(throw %)))))
 
 (defn ingresar-historia-a-sistema

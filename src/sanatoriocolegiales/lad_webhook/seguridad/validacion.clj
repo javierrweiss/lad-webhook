@@ -58,7 +58,8 @@
            patient_external_id]
     :as request-info}]
   (mulog/log ::validar-paciente :fecha (LocalDateTime/now) :paciente patient_external_id)
-  (if-let [paciente (->> (selecciona-guardia hc fecha hora) (ejecuta! asistencial) seq)]
+  (tap> (asistencial))
+  (if-let [paciente (->> (selecciona-guardia hc fecha hora) (ejecuta! (asistencial)) seq)]
     (merge (first paciente) request-info)
     (do
       (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [hc
