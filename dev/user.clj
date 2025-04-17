@@ -80,7 +80,7 @@
 (println "Iniciando hyperfiddle rcf para tests...")
 (hyperfiddle.rcf/enable!)
 
- 
+  
 ;; ---------------------------------------------------------
 ;; Hotload libraries into running REPL
 ;; `deps-*` LSP snippets to add dependency forms
@@ -91,7 +91,7 @@
   (restart)
   (stop)      
   (start) 
-                   
+                    
          
   (tap> (:donut.system/instances (system))) 
   #'system
@@ -191,6 +191,46 @@
                                                            :doctor_id "27217651420",
                                                            :patient_location_region_code "D",
                                                            :call_id (str (random-uuid))}})})
+
+  @(http/post "http://127.0.0.1:2000/lad/historia_clinica_guardia?client_id=lad&client_secret=123456"
+              {:headers {"Content-Type" "application/json"}
+               :body (json/generate-string {:datetime "2025-01-17T10:17:19.813Z",
+                                            :event_type "CALL_ENDED",
+                                            :event_object {:patient_id "12345678",
+                                                           :doctor_enrollment_prov "C",
+                                                           :patient_phone "+1234567890",
+                                                           :call_diagnosis "Otalgia y secreción del oído",
+                                                           :patient_gender "F",
+                                                           :call_cie10 "H92",
+                                                           :call_doctor_rating 0,
+                                                           :call_motive "Fiebre / Sin otros síntomas mencionados",
+                                                           :call_patient_comment "",
+                                                           :call_patient_rating 0,
+                                                           :patient_email "johndoe@example.com",
+                                                           :call_start_datetime "2025-01-17T09:12:19.225Z",
+                                                           :doctor_specialty "Medicina General",
+                                                           :patient_location_city "",
+                                                           :rest_indication false,
+                                                           :call_resolution "referred",
+                                                           :doctor_enrollment "100016",
+                                                           :provider_id "64ef63311b7b9a0091cc8934",
+                                                           :patient_location_longitude -80,
+                                                           :order_id "1-31764197940",
+                                                           :call_doctor_comment
+                                                           "FIEBRE DESDE HOY, REFIERE OTALGIA ESTUVO EN PISCINA Y MAR? DICE NO MOCO NI TOS CONTROL PRESENCIAL PARA OTOSCOPIA OTITIS EXTERNA O MEDIA?",
+                                                           :patient_name "John Doe",
+                                                           :patient_age 9,
+                                                           :custom_questions "",
+                                                           :patient_external_id {:idType "CI", :uid "abcd1234-ef56-7890-gh12-ijklmnopqrst"},
+                                                           :call_duration 151,
+                                                           :doctor_enrollment_type "334455",
+                                                           :doctor_name "Amezqueta Marcela",
+                                                           :patient_location_latitude 9,
+                                                           :patient_location_country_code "PA",
+                                                           :doctor_id "27217651420",
+                                                           :patient_location_region_code "",
+                                                           :call_id "669082f3492f32a38fe8fc37"}})})
+
 
   @(http/post "https://lad-webhook-dev.sanatoriocolegiales.com.ar/lad/historia_clinica_guardia?client_id=lad&client_secret=123456"
               {:headers {"Content-Type" "application/json"}

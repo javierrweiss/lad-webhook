@@ -39,7 +39,8 @@
   ;; System
   aero/aero           {:mvn/version "1.1.6"}
   party.donut/system  {:mvn/version "1.0.254"}
-  org.clojure/clojure {:mvn/version "1.11.4"}}
+  org.clojure/clojure {:mvn/version "1.12.0"}
+  com.potetm/fusebox {:mvn/version "1.0.9"}}
  ;; ---------------------------------------------------------
 
  ;; ---------------------------------------------------------
