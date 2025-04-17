@@ -6,17 +6,22 @@
    [fmnoise.flow :as flow :refer [then]]
    [sanatoriocolegiales.lad-webhook.seguridad.validacion :refer [valida-paciente valida-request valida-event-object]]
    [com.brunobonacci.mulog :as mulog]
+   [cheshire.core :as json]
    [sanatoriocolegiales.lad-webhook.especificaciones.especificaciones :as especificaciones])
   (:import java.time.LocalDateTime))
 
 (defn procesa-atencion
   [request sys]
-  (->> request
-       valida-event-object
-       (then #(extraer-event-object %))
-       (then #(valida-paciente sys %))
-       (then #(ingresar-historia-a-sistema sys %))
-       (created "/")))
+  (tap> sys)
+  (assoc
+   (->> request
+        valida-event-object
+        (then #(extraer-event-object %))
+        (then #(valida-paciente sys %))
+        (then #(ingresar-historia-a-sistema sys %))
+         json/encode
+        (created "/"))
+   :headers {"Content-Type" "application/json"}))
 
 (defn procesa-eventos
   [{:keys [event_type] :as req} sys]
@@ -24,8 +29,8 @@
     nil (throw (ex-info "El objeto no tiene la forma esperada" {:type :sanatoriocolegiales.lad-webhook.error.error/bad-request}))
     "CALL_ENDED" (procesa-atencion req sys)
     (do (mulog/log ::recepcion-evento-no-esperado :request req :fecha (LocalDateTime/now))
-        (-> (response "Recibido")
-            (assoc :headers {"Content-Type" "text/plain"})))))
+        (-> (response (json/encode {:mensaje "Recibido"}))
+            (assoc :headers {"Content-Type" "application/json"})))))
 
 (defn handler
   [conf req]
@@ -41,14 +46,13 @@
            :description "Procesa las atenciones y genera/actualiza la historia clínica del paciente"
            :parameters {:query {:client_id string?
                                 :client_secret string?}
-                        :body #_{:datetime string?
-                               :event_type string?
-                               :event_object map?} :message/message}
+                        :body  :message/message}
            :handler (partial handler system-config)}}])
 
 
 (comment
 
   (created "/" {:id 233})
+  (created "/" "Bien")
   (-> (ring.util.response/response "Bien")
       (ring.util.response/content-type "text/plain")))
