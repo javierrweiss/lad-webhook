@@ -170,7 +170,7 @@
 (defn ingresar-historia-a-sistema
   [db paciente]
   (when (persiste-historia-clinica! db paciente)
-    {:id (:guar-hist-clinica paciente)}))
+    {:id (:hc paciente)}))
 
  
 (tests
@@ -252,14 +252,14 @@
 
  (def test-obj
    {:hc 145233
-    :reservas-fech 20240924
-    :reservas-hora 1156
+    :reservasfech 20240924
+    :reservashora 1156
     :hora-inicio-atencion 1245
     :hora-final-atencion 1305
     :fecha-inicio-atencion 20240924
-    :reservas-obra 1820
-    :reservas-obrpla "XILOPORTE"
-    :reservas-nroben "ERFD·DDSDSDS-DSDS"
+    :reservasobra 1820
+    :reservasobrpla "XILOPORTE"
+    :reservasnroben "ERFD·DDSDSDS-DSDS"
     :diagnostico "Este es un diagnóstico muy, pero muy arrecho, ¡arreeechoo!"
     :historia "Estas son las anotaciones del médico"
     :descripcion-patologia "PATOLOGIA PATOLOGICA"
