@@ -39,12 +39,15 @@
  
 (defn obtener-hora
   [hora]
-  (->> hora str (take 2) (apply str) (Integer/parseInt)))
+  (if-not (number? hora)
+    (throw (ex-info "La hora no es un número" {:hora hora}))
+    (->> hora str (take 2) (apply str) (Integer/parseInt))))
 
 (defn obtener-minutos
   [hora]
-  (->> hora str (drop 2) (apply str) (Integer/parseInt)))
-
+  (if-not (number? hora)
+    (throw (ex-info "La hora no es un número" {:hora hora}))
+    (->> hora str (drop 2) (apply str) (Integer/parseInt))))
 
 (comment
   
@@ -84,4 +87,7 @@
  (obtener-hora-finalizacion 101 20) := 121
  (obtener-hora-finalizacion 59 25) := 124
  (obtener-hora-finalizacion 2350 15) := 5
+
+ (obtener-hora "Camba") :throws clojure.lang.ExceptionInfo
+ (obtener-minutos "dae qefs arwef") :throws clojure.lang.ExceptionInfo
  )     
