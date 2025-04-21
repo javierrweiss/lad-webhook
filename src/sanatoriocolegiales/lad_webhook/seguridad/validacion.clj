@@ -1,7 +1,7 @@
 (ns sanatoriocolegiales.lad-webhook.seguridad.validacion
   (:require [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta!]]
             [sanatoriocolegiales.lad-webhook.seguridad.autorizacion :refer [autenticar-y-autorizar-solicitud]]
-            [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [selecciona-guardia inserta-en-tbl-ladguardia-fallidos]]
+            [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [busca-paciente-en-reservas inserta-en-tbl-ladguardia-fallidos]]
             [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer []]
             [clojure.java.io :as io]
             [com.brunobonacci.mulog :as mulog]
@@ -58,8 +58,8 @@
            patient_external_id]
     :as request-info}]
   (mulog/log ::validar-paciente :fecha (LocalDateTime/now) :paciente patient_external_id)
-  (tap> (asistencial))
-  (if-let [paciente (->> (selecciona-guardia hc fecha hora) (ejecuta! (asistencial)) seq)]
+  #_(tap> (asistencial))
+  (if-let [paciente (->> (busca-paciente-en-reservas hc) (ejecuta! (asistencial)) seq)]
     (merge (first paciente) request-info)
     (do
       (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [hc
@@ -291,8 +291,6 @@
 
 
 (comment
-
-  (re-matches #"\d+" "112330a")
   
   (valida-event-object nil)
 
@@ -319,9 +317,9 @@
 
   (def request (-> (io/resource "payload_model.edn") slurp clojure.edn/read-string))
 
-  (let [conexiones {:asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
-                    :bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares)}]
-    (valida-paciente conexiones request))
+  (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
+        hc  731378]
+    (->> (busca-paciente-en-reservas hc) (ejecuta! (asistencial)) seq))
 
   ;; No hay ventaja en desempeño ni en legibilidad para usar una sola desestructuración
   (dotimes [_ 10]
