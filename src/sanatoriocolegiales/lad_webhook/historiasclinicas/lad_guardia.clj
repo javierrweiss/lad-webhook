@@ -2,8 +2,7 @@
   (:require
    [manifold.deferred :as d]
    [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac
-                                                           inserta-en-tbc-histpac-txt
-                                                           actualiza-tbc-guardia
+                                                           inserta-en-tbc-histpac-txt 
                                                            busca-en-tbc-patologia]]
    [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]]
    [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora
@@ -48,15 +47,14 @@
 
 (defn prepara-registros
   "Adapta el mapa que viene del request y devuelve un vector con tres registros (también vectores) listos para ser persistidos"
-  [{:keys [guar-hist-clinica
-           guar-fecha-ingreso
-           guar-hora-ingreso
+  [{:keys [hc
+           reservas-fech
+           reservas-hora
            hora-inicio-atencion
-           hora-final-atencion
-           fecha-inicio-atencion
-           guar-obra
-           guar-plan
-           guar-nroben
+           hora-final-atencion 
+           reservas-obra
+           reservas-obrpla
+           reservas-nroben
            diagnostico
            historia
            descripcion-patologia
@@ -66,30 +64,27 @@
            medico
            matricula
            motivo]}]
-  (let [hora (obtener-hora guar-hora-ingreso)
-        minutos (obtener-minutos guar-hora-ingreso)
+  (let [hora (obtener-hora reservas-hora)
+        minutos (obtener-minutos reservas-hora)
         hora-fin (obtener-hora hora-final-atencion)
         minutos-fin (obtener-minutos hora-final-atencion)
         hora-ini (obtener-hora hora-inicio-atencion)
         minutos-ini (obtener-minutos hora-inicio-atencion)
-        nro-afiliado (let [len (count guar-nroben)]
+        nro-afiliado (let [len (count reservas-nroben)]
                        (if (> len 15)
-                         (->> guar-nroben (take 15) (apply str))
-                         guar-nroben))
-        cod-patol 9]
-    [;; tbc_guardia
-     [guar-hist-clinica guar-fecha-ingreso guar-hora-ingreso cod-patol hora-final-atencion fecha-inicio-atencion]
-    ;; tbc_histpac
-     [guar-hist-clinica
-      guar-fecha-ingreso
+                         (->> reservas-nroben (take 15) (apply str))
+                         reservas-nroben))]
+    [;; tbc_histpac
+     [hc
+      reservas-fech
       hora
       minutos
       0
       2
       407
-      guar-hist-clinica
-      guar-fecha-ingreso
-      guar-hist-clinica
+      hc
+      reservas-fech
+      hc
       407
       999880
       histpacmotivo
@@ -109,8 +104,8 @@
       0
       0
       ""
-      (or guar-obra 0)
-      (or guar-plan "")
+      (or reservas-obra 0)
+      (or reservas-obrpla "")
       ""
       nro-afiliado
       0
@@ -149,14 +144,13 @@
         (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) profesional-y-matricula cantidad]))))))
 
 (defn crea-historia-clinica!
-  "Persiste 4 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
-  [db registro-guardia registro-historia-paciente registro-historia-texto]
+  "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
+  [db registro-historia-paciente registro-historia-texto]
   (try
     (d/zip
      (d/future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
      (d/future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
-     (d/future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto)))
-     (d/future (ejecuta! db (actualiza-tbc-guardia registro-guardia))))
+     (d/future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto))))
     (catch Exception e (throw e))))
 
 (defn persiste-historia-clinica!
@@ -165,11 +159,11 @@
   @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
                 histpacmotivo (obtiene-numerador! (:desal db))
                 descripcion-patologia (ejecuta! ((:maestros db)) (busca-en-tbc-patologia 3264))
-                [guardia hc hc-texto] (prepara-registros (assoc paciente 
-                                                                :histpactratam histpactratam 
-                                                                :histpacmotivo histpacmotivo
-                                                                :descripcion-patologia (-> descripcion-patologia first :pat-descrip)))]
-               (-> (crea-historia-clinica! ((:asistencial db)) guardia hc hc-texto)
+                [hc hc-texto] (prepara-registros (assoc paciente
+                                                        :histpactratam histpactratam
+                                                        :histpacmotivo histpacmotivo
+                                                        :descripcion-patologia (-> descripcion-patologia first :pat-descrip)))]
+               (-> (crea-historia-clinica! ((:asistencial db)) hc hc-texto)
                    (d/catch Exception #(throw %)))))
 
 (defn ingresar-historia-a-sistema
@@ -212,7 +206,7 @@
                       :patient_gender "M",
                       :call_cie10 "K21",
                       :call_doctor_rating 5,
-                      :call_motive nil,
+                      :call_motive "dcss fs bsgagfb ds",
                       :call_patient_comment "",
                       :call_patient_rating 0,
                       :patient_email "ccieri.christian@gmail.com",
@@ -223,7 +217,7 @@
                       :doctor_enrollment "123456",
                       :provider_id "5ef21520359c9f0087212b1f",
                       :patient_location_longitude -57.5351,
-                      :order_id "144160",
+                      :order_id "2024/01/05 14:16",
                       :call_doctor_comment "Evolucion ",
                       :patient_name "Christian Cieri",
                       :patient_age 38,
@@ -237,7 +231,7 @@
                       :patient_location_region_code "B",
                       :call_id "67ee7bb6812ed1489773ed9e"}})
  
- (let [obj (extraer-event-object event-object)]
+ (let [obj (extraer-event-object (:event_object event-object2))]
    (number? (:fecha obj)) := true
    (number? (:hora obj)) := true
    (number? (:fecha-inicio-atencion obj)) := true
@@ -256,15 +250,15 @@
  "Cuando se recibe request y registro de guardia de paciente, se crean tres registros con el tamaño y los tipos de datos adecuados..."
 
  (def test-obj
-   {:guar-hist-clinica 145233
-    :guar-fecha-ingreso 20240924
-    :guar-hora-ingreso 1156
+   {:hc 145233
+    :reservas-fech 20240924
+    :reservas-hora 1156
     :hora-inicio-atencion 1245
     :hora-final-atencion 1305
     :fecha-inicio-atencion 20240924
-    :guar-obra 1820
-    :guar-plan "XILOPORTE"
-    :guar-nroben "ERFD·DDSDSDS-DSDS"
+    :reservas-obra 1820
+    :reservas-obrpla "XILOPORTE"
+    :reservas-nroben "ERFD·DDSDSDS-DSDS"
     :diagnostico "Este es un diagnóstico muy, pero muy arrecho, ¡arreeechoo!"
     :historia "Estas son las anotaciones del médico"
     :descripcion-patologia "PATOLOGIA PATOLOGICA"
@@ -274,10 +268,9 @@
     :matricula 1234587})
 
  (let [registros (prepara-registros test-obj)]
-   (count registros) := 3
-   (map count registros) := [6 40 6]
-   (every? number? (first registros)) := true
-   (mapv type (second registros))  := [java.lang.Long
+   (count registros) := 2
+   (mapv count registros) := [40 6] 
+   (mapv type (first registros))  := [java.lang.Long
                                        java.lang.Long
                                        java.lang.Integer
                                        java.lang.Integer
@@ -355,12 +348,7 @@
     #_(persiste-historia-clinica! {:asistencial asistencial
                                  :desal desal} req)
     #_@(apply crea-historia-clinica! asistencial registros))
-
-  (let [asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)
-        registro [182222 20240808 1300 9 343 20240712]]
-    #_(actualiza-tbc-guardia registro)
-    (ejecuta! asistencial (actualiza-tbc-guardia registro)))
-
+  
   (d/let-flow [a (do (Thread/sleep 1000)
                      1)
                b (do (Thread/sleep 2000) 2)
