@@ -21,23 +21,74 @@
            com.zaxxer.hikari.HikariDataSource))
 
 (use-fixtures :each (ds/system-fixture
-                     {::ds/defs {:testcontainer {:contenedor #::ds{:start (fn configurar-contenedor
-                                                                            [_]
-                                                                            (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init.sql"))
-                                                                                          :exposed-ports [5432]})
-                                                                                (tc/start!)))
-                                                                   :stop (fn detener-contenedor
-                                                                           [{::ds/keys [instance]}]
-                                                                           (tc/stop! instance))}
-                                                 :conexion #::ds{:start (fn conectar
-                                                                          [{{{:keys [container]} :test-cont} ::ds/config}]
-                                                                          (let [opts {:username (.getUsername container)
-                                                                                      :password (.getPassword container)}]
-                                                                            (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl container)} opts))))
-                                                                 :stop (fn cerrar
+                     {::ds/defs {:asistencial {:contenedor #::ds{:start (fn configurar-contenedor
+                                                                          [_]
+                                                                          (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init_asistencial.sql"))
+                                                                                        :exposed-ports [5432]})
+                                                                              (tc/start!)))
+                                                                 :stop (fn detener-contenedor
                                                                          [{::ds/keys [instance]}]
-                                                                         (.close instance))
-                                                                 :config {:test-cont (ds/local-ref [:contenedor])}}}}}))
+                                                                         (tc/stop! instance))}
+                                               :conexion #::ds{:start (fn conectar
+                                                                        [{{{:keys [container]} :test-cont} ::ds/config}]
+                                                                        (let [opts {:username (.getUsername container)
+                                                                                    :password (.getPassword container)}]
+                                                                          (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl container)} opts))))
+                                                               :stop (fn cerrar
+                                                                       [{::ds/keys [instance]}]
+                                                                       (.close instance))
+                                                               :config {:test-cont (ds/local-ref [:contenedor])}}}
+                                 :desal {:contenedor #::ds{:start (fn configurar-contenedor
+                                                                    [_]
+                                                                    (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init_desal.sql"))
+                                                                                  :exposed-ports [5432]})
+                                                                        (tc/start!)))
+                                                           :stop (fn detener-contenedor
+                                                                   [{::ds/keys [instance]}]
+                                                                   (tc/stop! instance))}
+                                         :conexion #::ds{:start (fn conectar
+                                                                  [{{{:keys [container]} :test-cont} ::ds/config}]
+                                                                  (let [opts {:username (.getUsername container)
+                                                                              :password (.getPassword container)}]
+                                                                    (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl container)} opts))))
+                                                         :stop (fn cerrar
+                                                                 [{::ds/keys [instance]}]
+                                                                 (.close instance))
+                                                         :config {:test-cont (ds/local-ref [:contenedor])}}}
+                                 :bases_auxiliares {:contenedor #::ds{:start (fn configurar-contenedor
+                                                                               [_]
+                                                                               (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init_bases_auxiliares.sql"))
+                                                                                             :exposed-ports [5432]})
+                                                                                   (tc/start!)))
+                                                                      :stop (fn detener-contenedor
+                                                                              [{::ds/keys [instance]}]
+                                                                              (tc/stop! instance))}
+                                                    :conexion #::ds{:start (fn conectar
+                                                                             [{{{:keys [container]} :test-cont} ::ds/config}]
+                                                                             (let [opts {:username (.getUsername container)
+                                                                                         :password (.getPassword container)}]
+                                                                               (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl container)} opts))))
+                                                                    :stop (fn cerrar
+                                                                            [{::ds/keys [instance]}]
+                                                                            (.close instance))
+                                                                    :config {:test-cont (ds/local-ref [:contenedor])}}}
+                                 :maestros {:contenedor #::ds{:start (fn configurar-contenedor
+                                                                       [_]
+                                                                       (-> (tc/init {:container (-> (PostgreSQLContainer. "postgres:12.2") (.withInitScript "init_maestros.sql"))
+                                                                                     :exposed-ports [5432]})
+                                                                           (tc/start!)))
+                                                              :stop (fn detener-contenedor
+                                                                      [{::ds/keys [instance]}]
+                                                                      (tc/stop! instance))}
+                                            :conexion #::ds{:start (fn conectar
+                                                                     [{{{:keys [container]} :test-cont} ::ds/config}]
+                                                                     (let [opts {:username (.getUsername container)
+                                                                                 :password (.getPassword container)}]
+                                                                       (connection/->pool HikariDataSource (merge {:jdbcUrl (.getJdbcUrl container)} opts))))
+                                                            :stop (fn cerrar
+                                                                    [{::ds/keys [instance]}]
+                                                                    (.close instance))
+                                                            :config {:test-cont (ds/local-ref [:contenedor])}}}}}))
 
 (defspec cuando-recibe-evento-inesperados-responde-200
   100
@@ -187,13 +238,16 @@
                                                                     "client_secret" "123456"}}))))))))
 
 (defspec cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201 
-  2
+  10
   (prop/for-all [call-ended (spec/gen :call_ended/event_object)] 
-                (let [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])
-                      sistema {:asistencial (fn [] conn)
-                               :desal  conn
-                               :bases_auxiliares conn
-                               :maestros (fn [] conn)
+                (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+                      maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+                      bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+                      desal (get-in ds/*system* [::ds/instances :desal :conexion])
+                      sistema {:asistencial (fn [] asistencial)
+                               :desal desal
+                               :bases_auxiliares bases_auxiliares
+                               :maestros (fn [] maestros)
                                :env :test}] 
                   (is (== 201 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                           (merge {:body-params {:datetime (.toString (Instant/now))
@@ -204,82 +258,98 @@
 
 
 (defspec cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500
-  100)
-
+  10
+  (prop/for-all [call-ended (spec/gen :call_ended/event_object)]
+                (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+                      maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+                      bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+                      desal (get-in ds/*system* [::ds/instances :desal :conexion])
+                      sistema {:asistencial (fn [] asistencial)
+                               :desal desal
+                               :bases_auxiliares bases_auxiliares
+                               :maestros (fn [] maestros)
+                               :env :test}]
+                  (is (== 500 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                          (merge {:body-params {:datetime (.toString (Instant/now))
+                                                                                :event_type "CALL_ENDED"
+                                                                                :event_object call-ended}
+                                                                  :query-params {"client_id" "lad"
+                                                                                 "client_secret" "123456"}})))))))))
 
 
 (deftest dummy-connection-test
   (testing "Test de control que verifica operatividad de testcontainer"
-(with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])] 
-  (is (seq (jdbc/execute! conn ["SELECT NOW()"]))))))
+(let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+      maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+      bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+      desal (get-in ds/*system* [::ds/instances :desal :conexion])] 
+  (is (seq (jdbc/execute! asistencial ["SELECT NOW()"])))
+  (is (seq (jdbc/execute! maestros ["SELECT NOW()"])))
+  (is (seq (jdbc/execute! bases_auxiliares ["SELECT NOW()"])))
+  (is (seq (jdbc/execute! desal ["SELECT NOW()"]))))))
 
 #_(deftest requests
     
-  (testing "Cuando recibe una solicitud con un paciente no registrado, lanza excepción"
-    (is (thrown? clojure.lang.ExceptionInfo (atencion-guardia/procesa-atencion payload sistema)))
-    (is (= "Paciente no encontrado"  (try (atencion-guardia/procesa-atencion payload sistema)
-                                          (catch clojure.lang.ExceptionInfo e (ex-message e))))))
+  
   (testing "Cuando recibe una solicitud con un paciente no registrado, devuelve código 404"
     (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                             (merge {:body-params payload
                                                     :query-params {"client_id" "lad"
-                                                                   "client_secret" "123456"}})))))))
-  (testing "Cuando recibe solicitud correcta, devuelve estatus 201"
-    (jdbc/execute! (:asistencial sistema)
-                   (aux/sql-insertar-registro-en-guardia 182222 20240808 1300 1 4 "John Doe" 1820 "GIHI" "11··$MMM" "A" "B" "Bla")
-                   {:builder-fn rs/as-unqualified-kebab-maps})
-    (is (== 201 (:status (atencion-guardia/procesa-atencion payload sistema))))))
+                                                                   "client_secret" "123456"}}))))))))
 
 
-(deftest ingreso-registros-db
-  (with-open [conn (get-in ds/*system* [::ds/instances :testcontainer :conexion])]
-    (let [sistema {:asistencial (constantly conn)
-                   :desal conn
-                   :bases_auxiliares conn
-                   :maestros (constantly conn)
-                   :env :test}
-          paciente {:hc 145200
-                    :fecha 20241002
-                    :hora 1256
-                    :nombre "Pepino El Breve"
-                    :historia "Presenta un mal muy severo: estupidez"
-                    :patologia "Estupidez cronica"
-                    :diagnostico "Falta de cultura"
-                    :motivo "Ignorancia"
-                    :patient_external_id "145200"
-                    :guar-hist-clinica 145200
-                    :guar-fecha-ingreso 20241002
-                    :guar-hora-ingreso 1256
-                    :hora-inicio-atencion 1256
-                    :hora-final-atencion 1314
-                    :fecha-inicio-atencion 20241002
-                    :guar-obra 1820
-                    :guar-plan "4000-A"
-                    :guar-nroben "1123-AC"
-                    :descripcion-patologia "Cree saberlo todo y de todo opina"
-                    :histpactratam 123456
-                    :histpacmotivo 123457
-                    :medico "Galeno"
-                    :matricula 125546}
-          _ (println (str "Insertando registro en guardia... "
-                          (jdbc/execute! (:asistencial sistema)
-                                         (aux/sql-insertar-registro-en-guardia 145200 20241002 1256 1 1 "Pepino El Breve" 1820 "4000-A" "1123-AC" "A" "B" "Bla")
-                                         {:builder-fn rs/as-unqualified-kebab-maps})))
-          ejecucion (ingresar-historia-a-sistema sistema paciente)]
-      (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
-        (is (== (:id ejecucion) (:hc paciente))))
-      (let [registro-histpac (jdbc/execute! conn ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-kebab-maps})
-            registro-histpac-txt (jdbc/execute! conn ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})
-            registro-guardia (jdbc/execute! conn ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 145200"] {:builder-fn rs/as-unqualified-kebab-maps})]
-        (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
-          (is (== 5 (count registro-histpac-txt)))
-          (is (== 1 (count registro-histpac))))
-        (testing "Cuando ingresa exitosamente los registros, actualiza el registro correspondiente en tbc_guardia"
-          (println (str "Consulta a guardia: " registro-guardia))
-          (is (== 4 (-> registro-guardia first :guar-estado)))
-          (is (== 9 (-> registro-guardia first :guar-diagnostico)))
-          (is (== 20241002 (-> registro-guardia first :guar-fechaalta)))
-          (is (== 1314 (-> registro-guardia first :guar-horaalta))))))))
+(deftest ingreso-registros-db 
+  (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+        maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+        bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+        desal (get-in ds/*system* [::ds/instances :desal :conexion])
+        sistema {:asistencial (fn [] asistencial)
+                 :desal desal
+                 :bases_auxiliares bases_auxiliares
+                 :maestros (fn [] maestros)
+                 :env :test}
+        paciente {:hc 145200
+                  :fecha 20241002
+                  :hora 1256
+                  :nombre "Pepino El Breve"
+                  :historia "Presenta un mal muy severo: estupidez"
+                  :patologia "Estupidez cronica"
+                  :diagnostico "Falta de cultura"
+                  :motivo "Ignorancia"
+                  :patient_external_id "145200"
+                  :guar-hist-clinica 145200
+                  :guar-fecha-ingreso 20241002
+                  :guar-hora-ingreso 1256
+                  :hora-inicio-atencion 1256
+                  :hora-final-atencion 1314
+                  :fecha-inicio-atencion 20241002
+                  :guar-obra 1820
+                  :guar-plan "4000-A"
+                  :guar-nroben "1123-AC"
+                  :descripcion-patologia "Cree saberlo todo y de todo opina"
+                  :histpactratam 123456
+                  :histpacmotivo 123457
+                  :medico "Galeno"
+                  :matricula 125546}
+        _ (println (str "Insertando registro en guardia... "
+                        (jdbc/execute! (:asistencial sistema)
+                                       (aux/sql-insertar-registro-en-guardia 145200 20241002 1256 1 1 "Pepino El Breve" 1820 "4000-A" "1123-AC" "A" "B" "Bla")
+                                       {:builder-fn rs/as-unqualified-kebab-maps})))
+        ejecucion (ingresar-historia-a-sistema sistema paciente)]
+    (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
+      (is (== (:id ejecucion) (:hc paciente))))
+    (let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-kebab-maps})
+          registro-histpac-txt (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})
+          registro-guardia (jdbc/execute! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 145200"] {:builder-fn rs/as-unqualified-kebab-maps})]
+      (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
+        (is (== 5 (count registro-histpac-txt)))
+        (is (== 1 (count registro-histpac))))
+      (testing "Cuando ingresa exitosamente los registros, actualiza el registro correspondiente en tbc_guardia"
+        (println (str "Consulta a guardia: " registro-guardia))
+        (is (== 4 (-> registro-guardia first :guar-estado)))
+        (is (== 9 (-> registro-guardia first :guar-diagnostico)))
+        (is (== 20241002 (-> registro-guardia first :guar-fechaalta)))
+        (is (== 1314 (-> registro-guardia first :guar-horaalta)))))))
  
 (comment
 
@@ -299,7 +369,7 @@
 
   (run-test cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
 
-  (run-test >cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
+  (run-test cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500)
   
   
   (let [m (gen/generate (gen/bind  (gen/fmap #(assoc-in % [:event_object :m] "sdds") (spec/gen :message/message))
