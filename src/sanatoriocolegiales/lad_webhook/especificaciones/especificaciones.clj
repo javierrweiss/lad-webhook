@@ -456,12 +456,14 @@
   (gen/generate (spec/gen ::call_id)) 
 
   (gen/generate (spec/gen ::order_id))
- 
+  
   (gen/generate (spec/gen :message/message)) 
   
   (spec/explain :message/message (clojure.edn/read-string
                                   (slurp
                                    (clojure.java.io/resource "payload_model.edn"))))
   
-(gen/generate (spec/gen :call_ended/event_object))
+  (gen/generate (spec/gen :call_ended/event_object))
+  
+  (gen/generate (spec/gen (spec/inst-in #inst "2025-01-01T01:17:19.813Z" #inst "2025-12-31T00:00:00.813Z")))
   :rcf)

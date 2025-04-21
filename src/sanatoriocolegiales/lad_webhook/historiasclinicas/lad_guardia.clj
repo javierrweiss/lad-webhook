@@ -48,13 +48,13 @@
 (defn prepara-registros
   "Adapta el mapa que viene del request y devuelve un vector con tres registros (también vectores) listos para ser persistidos"
   [{:keys [hc
-           reservas-fech
-           reservas-hora
+           reservasfech
+           reservashora
            hora-inicio-atencion
            hora-final-atencion 
-           reservas-obra
-           reservas-obrpla
-           reservas-nroben
+           reservasobra
+           reservasobrpla
+           reservasnroben
            diagnostico
            historia
            descripcion-patologia
@@ -64,26 +64,26 @@
            medico
            matricula
            motivo]}]
-  (let [hora (obtener-hora reservas-hora)
-        minutos (obtener-minutos reservas-hora)
+  (let [hora (obtener-hora reservashora)
+        minutos (obtener-minutos reservashora)
         hora-fin (obtener-hora hora-final-atencion)
         minutos-fin (obtener-minutos hora-final-atencion)
         hora-ini (obtener-hora hora-inicio-atencion)
         minutos-ini (obtener-minutos hora-inicio-atencion)
-        nro-afiliado (let [len (count reservas-nroben)]
+        nro-afiliado (let [len (count reservasnroben)]
                        (if (> len 15)
-                         (->> reservas-nroben (take 15) (apply str))
-                         reservas-nroben))]
+                         (->> reservasnroben (take 15) (apply str))
+                         reservasnroben))]
     [;; tbc_histpac
      [hc
-      reservas-fech
+      reservasfech
       hora
       minutos
       0
       2
       407
       hc
-      reservas-fech
+      reservasfech
       hc
       407
       999880
@@ -104,8 +104,8 @@
       0
       0
       ""
-      (or reservas-obra 0)
-      (or reservas-obrpla "")
+      (or reservasobra 0)
+      (or reservasobrpla "")
       ""
       nro-afiliado
       0
@@ -156,6 +156,7 @@
 (defn persiste-historia-clinica!
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
   [db paciente]
+  #_(tap> paciente)
   @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
                 histpacmotivo (obtiene-numerador! (:desal db))
                 descripcion-patologia (ejecuta! ((:maestros db)) (busca-en-tbc-patologia 3264))

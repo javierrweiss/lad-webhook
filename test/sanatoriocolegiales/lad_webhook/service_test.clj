@@ -238,7 +238,7 @@
                                                                     "client_secret" "123456"}}))))))))
 
 (defspec cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201 
-  10
+  5
   (prop/for-all [call-ended (spec/gen :call_ended/event_object)] 
                 (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
                       maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
@@ -248,8 +248,32 @@
                                :desal desal
                                :bases_auxiliares bases_auxiliares
                                :maestros (fn [] maestros)
-                               :env :test}] 
-                  (is (== 201 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                               :env :test}]
+                  (->> (:patient_external_id call-ended)
+                       (Integer/parseInt)
+                       aux/sql-insertar-registro-en-reservas
+                       (jdbc/execute! ((:asistencial sistema))))
+                  (Thread/sleep 100)
+                       (is (== 201 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                                               (merge {:body-params {:datetime (.toString (Instant/now))
+                                                                                     :event_type "CALL_ENDED"
+                                                                                     :event_object call-ended}
+                                                                       :query-params {"client_id" "lad"
+                                                                                      "client_secret" "123456"}})))))))))
+
+(defspec cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404
+  10
+  (prop/for-all [call-ended (spec/gen :call_ended/event_object)]
+                (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+                      maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+                      bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+                      desal (get-in ds/*system* [::ds/instances :desal :conexion])
+                      sistema {:asistencial (fn [] asistencial)
+                               :desal desal
+                               :bases_auxiliares bases_auxiliares
+                               :maestros (fn [] maestros)
+                               :env :test}]
+                  (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
                                                           (merge {:body-params {:datetime (.toString (Instant/now))
                                                                                 :event_type "CALL_ENDED"
                                                                                 :event_object call-ended}
@@ -365,11 +389,13 @@
 
   (run-test cuando-no-recibe-query-string-con-autorizacion-responde-401)
 
-  (run-test cuando-recibe-objecto-invalido-devuelve-400)
+  (run-test cuando-recibe-objecto-invalido-devuelve-400) 
 
   (run-test cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
 
   (run-test cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500)
+
+  (run-test cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404)
   
   
   (let [m (gen/generate (gen/bind  (gen/fmap #(assoc-in % [:event_object :m] "sdds") (spec/gen :message/message))

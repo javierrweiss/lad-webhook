@@ -60,6 +60,7 @@
   (mulog/log ::validar-paciente :fecha (LocalDateTime/now) :paciente patient_external_id)
   #_(tap> (asistencial))
   (if-let [paciente (->> (busca-paciente-en-reservas hc) (ejecuta! (asistencial)) seq)]
+    #_(do (tap> (first paciente)))
     (merge (first paciente) request-info)
     (do
       (ejecuta! bases_auxiliares (inserta-en-tbl-ladguardia-fallidos [hc
