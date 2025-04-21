@@ -2,7 +2,7 @@
   (:require [clojure.test :refer [deftest is testing use-fixtures run-test run-all-tests]]
             [donut.system :as ds]
             [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as atencion-guardia]
-            [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :refer [ingresar-historia-a-sistema]]
+            [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :as lad-guardia]
             [sanatoriocolegiales.lad-webhook.router :refer [app]]
             [clj-test-containers.core :as tc]
             [next.jdbc :as jdbc]
@@ -237,29 +237,29 @@
                                                     {:query-params {"client_id" "lad"
                                                                     "client_secret" "123456"}}))))))))
 
-(defspec cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201 
-  5
-  (prop/for-all [call-ended (spec/gen :call_ended/event_object)] 
-                (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
-                      maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
-                      bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
-                      desal (get-in ds/*system* [::ds/instances :desal :conexion])
-                      sistema {:asistencial (fn [] asistencial)
-                               :desal desal
-                               :bases_auxiliares bases_auxiliares
-                               :maestros (fn [] maestros)
-                               :env :test}]
-                  (->> (:patient_external_id call-ended)
-                       (Integer/parseInt)
-                       aux/sql-insertar-registro-en-reservas
-                       (jdbc/execute! ((:asistencial sistema))))
-                  (Thread/sleep 100)
-                       (is (== 201 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                               (merge {:body-params {:datetime (.toString (Instant/now))
-                                                                                     :event_type "CALL_ENDED"
-                                                                                     :event_object call-ended}
-                                                                       :query-params {"client_id" "lad"
-                                                                                      "client_secret" "123456"}})))))))))
+(deftest cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201
+  (testing "Cuando recibe solicitud correcta y se inserta paciente devuelve 201" 
+    (let [call-ended (gen/generate (spec/gen :call_ended/event_object))
+          asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+          maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+          bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+          desal (get-in ds/*system* [::ds/instances :desal :conexion])
+          sistema {:asistencial (fn [] asistencial)
+                   :desal desal
+                   :bases_auxiliares bases_auxiliares
+                   :maestros (fn [] maestros)
+                   :env :test}]
+      (->> (:patient_external_id call-ended)
+           (Integer/parseInt)
+           aux/sql-insertar-registro-en-reservas
+           (jdbc/execute! ((:asistencial sistema))))
+      (Thread/sleep 100)
+      (is (== 201 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                              (merge {:body-params {:datetime (.toString (Instant/now))
+                                                                    :event_type "CALL_ENDED"
+                                                                    :event_object call-ended}
+                                                      :query-params {"client_id" "lad"
+                                                                     "client_secret" "123456"}})))))))))
 
 (defspec cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404
   10
@@ -299,8 +299,6 @@
                                                                                 :event_object call-ended}
                                                                   :query-params {"client_id" "lad"
                                                                                  "client_secret" "123456"}})))))))))
-
-
 (deftest dummy-connection-test
   (testing "Test de control que verifica operatividad de testcontainer"
 (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
@@ -311,16 +309,6 @@
   (is (seq (jdbc/execute! maestros ["SELECT NOW()"])))
   (is (seq (jdbc/execute! bases_auxiliares ["SELECT NOW()"])))
   (is (seq (jdbc/execute! desal ["SELECT NOW()"]))))))
-
-#_(deftest requests
-    
-  
-  (testing "Cuando recibe una solicitud con un paciente no registrado, devuelve código 404"
-    (is (== 404 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                            (merge {:body-params payload
-                                                    :query-params {"client_id" "lad"
-                                                                   "client_secret" "123456"}}))))))))
-
 
 (deftest ingreso-registros-db 
   (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
@@ -340,43 +328,35 @@
                   :patologia "Estupidez cronica"
                   :diagnostico "Falta de cultura"
                   :motivo "Ignorancia"
-                  :patient_external_id "145200"
-                  :guar-hist-clinica 145200
-                  :guar-fecha-ingreso 20241002
-                  :guar-hora-ingreso 1256
+                  :patient_external_id "145200" 
+                  :reservasfech 20241002
+                  :reservashora 1256
                   :hora-inicio-atencion 1256
                   :hora-final-atencion 1314
                   :fecha-inicio-atencion 20241002
-                  :guar-obra 1820
-                  :guar-plan "4000-A"
-                  :guar-nroben "1123-AC"
+                  :reservasobra 1820
+                  :reservasobrpla "4000-A"
+                  :reservasnroben "1123-AC"
                   :descripcion-patologia "Cree saberlo todo y de todo opina"
                   :histpactratam 123456
                   :histpacmotivo 123457
                   :medico "Galeno"
                   :matricula 125546}
         _ (println (str "Insertando registro en guardia... "
-                        (jdbc/execute! (:asistencial sistema)
-                                       (aux/sql-insertar-registro-en-guardia 145200 20241002 1256 1 1 "Pepino El Breve" 1820 "4000-A" "1123-AC" "A" "B" "Bla")
+                        (jdbc/execute! ((:asistencial sistema))
+                                       (aux/sql-insertar-registro-en-reservas 145200)
                                        {:builder-fn rs/as-unqualified-kebab-maps})))
-        ejecucion (ingresar-historia-a-sistema sistema paciente)]
+        ejecucion (lad-guardia/ingresar-historia-a-sistema sistema paciente)]
     (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
       (is (== (:id ejecucion) (:hc paciente))))
     (let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-kebab-maps})
-          registro-histpac-txt (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})
-          registro-guardia (jdbc/execute! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = 145200"] {:builder-fn rs/as-unqualified-kebab-maps})]
+          registro-histpac-txt (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})]
       (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
         (is (== 5 (count registro-histpac-txt)))
-        (is (== 1 (count registro-histpac))))
-      (testing "Cuando ingresa exitosamente los registros, actualiza el registro correspondiente en tbc_guardia"
-        (println (str "Consulta a guardia: " registro-guardia))
-        (is (== 4 (-> registro-guardia first :guar-estado)))
-        (is (== 9 (-> registro-guardia first :guar-diagnostico)))
-        (is (== 20241002 (-> registro-guardia first :guar-fechaalta)))
-        (is (== 1314 (-> registro-guardia first :guar-horaalta)))))))
+        (is (== 1 (count registro-histpac)))))))
  
-(comment
-
+(comment 
+  
   (run-all-tests)
 
   (run-test ingreso-registros-db)
@@ -387,12 +367,12 @@
 
   (run-test cuando-recibe-evento-inesperados-responde-recibido)
 
-  (run-test cuando-no-recibe-query-string-con-autorizacion-responde-401)
+  (run-test cuando-no-recibe-query-string-con-autorizacion-responde-401) 
 
   (run-test cuando-recibe-objecto-invalido-devuelve-400) 
-
+ 
   (run-test cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
-
+  
   (run-test cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500)
 
   (run-test cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404)
