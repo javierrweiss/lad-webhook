@@ -5,14 +5,14 @@
   [values] 
   (sql/format {:insert-into :tbc_histpac
                :columns [:histpacnro ;; hc
-                         :histpacfec ;; fecha ingreso tbc_guardia
+                         :histpacfec ;; fecha reservas
                          :histpach ;; hora
                          :histpacm ;; minutos
                          :histpacr ;; resto (segundos...) completar con ceros
                          :histpace ;; 2, guardia
                          :histpacespfir ;; 407
                          :histpacnro1 ;; hc
-                         :histpacfec1 ;; fecha ingreso tbc_guardia
+                         :histpacfec1 ;; fecha reservas
                          :histpacnro2 ;; hc
                          :histpacespfir1 ;; 407
                          :histpacmedfir ;; 999880 (con dígito verificador)
