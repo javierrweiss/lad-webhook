@@ -70,24 +70,12 @@
                          :diagnostico
                          :motivo]
                :values [values]}))
-;; Eliminar
-(defn actualiza-tbc-guardia
-  [[histclinica fecha hora diagnostico hora-atencion fecha-atencion]]
-  (sql/format {:update :tbc_guardia
-               :set {:guar_estado 4 
-                     :guar_diagnostico diagnostico        ;; Es el código de patología
-                     :guar_fechaalta fecha-atencion
-                     :guar_horaalta hora-atencion}
-               :where [:and 
-                       [:= :guar_histclinica histclinica] 
-                       [:= :guar_fechaingreso fecha] 
-                       [:= :guar_horaingreso hora]]}))
-;; Eliminar
-(defn selecciona-guardia
-  [histclinica fecha hora]
-  (sql/format {:select [:*] #_[:guar_histclinica :guar_fechaingreso :guar_horaingreso :guar_obra :guar_plan :guar_nroben]
-               :from :tbc_guardia
-               :where [:and [:= :guar_histclinica histclinica] [:= :guar_fechaingreso fecha] [:= :guar_horaingreso hora]]}))
+
+(defn busca-paciente-en-reservas
+  [histclinica]
+  (sql/format {:select [:reservasfech :reservashora :reservasobra :reservasobrpla :reservasnroben] 
+               :from :tbc_reservas
+               :where [:and [:= :reservashiscli histclinica] [:= :reservasmed 999880]]}))
 
 (defn busca-en-tbc-patologia
   [codigo]
@@ -117,5 +105,6 @@
   
   (busca-en-tbc-patologia 152)
 
-  (selecciona-guardia 1 2 3)
+  (let [hc 1]
+    (busca-paciente-en-reservas hc))
   )
