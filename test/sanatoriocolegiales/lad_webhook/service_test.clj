@@ -280,6 +280,27 @@
                                                                   :query-params {"client_id" "lad"
                                                                                  "client_secret" "123456"}})))))))))
 
+(deftest cuando-no-encuentra-paciente-escribe-en-tbl-ladguardia-fallidos
+  (testing "Cuando no encuentra paciente escribe en tbl-ladguardia-fallidos" 
+    (let [call-ended (gen/generate (spec/gen :call_ended/event_object))
+          asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+          maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+          bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+          desal (get-in ds/*system* [::ds/instances :desal :conexion])
+          sistema {:asistencial (fn [] asistencial)
+                   :desal desal
+                   :bases_auxiliares bases_auxiliares
+                   :maestros (fn [] maestros)
+                   :env :test}
+          _ ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                               (merge {:body-params {:datetime (.toString (Instant/now))
+                                                     :event_type "CALL_ENDED"
+                                                     :event_object call-ended}
+                                       :query-params {"client_id" "lad"
+                                                      "client_secret" "123456"}})))
+          consulta (jdbc/execute! (:bases_auxiliares sistema) ["SELECT * FROM tbl_ladguardia_fallidos WHERE hc = ?" (Integer/parseInt (:patient_external_id call-ended))])]
+      (tap> consulta)
+      (is (== 1 (count consulta))))))
 
 (defspec cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500
   10
@@ -376,6 +397,8 @@
   (run-test cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500)
 
   (run-test cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404)
+
+  (run-test cuando-no-encuentra-paciente-escribe-en-tbl-ladguardia-fallidos)
   
   
   (let [m (gen/generate (gen/bind  (gen/fmap #(assoc-in % [:event_object :m] "sdds") (spec/gen :message/message))
