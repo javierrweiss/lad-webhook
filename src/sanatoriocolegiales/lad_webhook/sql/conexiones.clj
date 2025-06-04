@@ -45,7 +45,7 @@
 
 (extend-protocol Devolver-conexion
   nil
-  (devolver [this] nil) 
+  (devolver [_] nil) 
 
   HikariDataSource
   (devolver [this] this) 

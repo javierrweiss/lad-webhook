@@ -2,24 +2,31 @@
 
 Servicio que consume webhook de LAD para procesamiento de historias clínicas realizadas a través de teleconsulta por guardia.
 
+Propósito:
+Utilizar el servicio de webhooks que ofrece la empresa LAD para ingresar a nuestro sistema la información de las historias clínicas que se realizan por guardia a través del mismo servicio.
+
+##  ¿Qué hace la aplicación?
+
+Según los nuevos requerimientos:
+
+1. Se busca al paciente en la tabla de reservas
+1.1. Si no se encuentra se inserta log en tbl_ladguardia_fallidos.
+2. Se extrae la información del request y se inserta en tbc_histpac y tbc_histpac_txt para crear la historia clínica.
+
+## Información básica
+
+URL producción: https://lad-webhook.sanatoriocolegiales.com.ar/lad/historia_clinica_guardia
+
+URL desarrollo: https://lad-webhook-dev.sanatoriocolegiales.com.ar/lad/historia_clinica_guardia
+
+Endpoint de salud: https://lad-webhook-dev.sanatoriocolegiales.com.ar/system-admin/status ó https://lad-webhook.sanatoriocolegiales.com.ar/system-admin/status
+
+Documentación Swagger API: https://lad-webhook-dev.sanatoriocolegiales.com.ar/index.html
+
+
 ## Project Status
 
-Integration Tests
-
-Project created with [deps-new](https://github.com/seancorfield/deps-new) and the [practicalli/service template](https://github.com/practicalli/project-templates)
-
-## TODOS
-
-[X] Está pendiente la definición de al menos una tabla que habría que agregar
-[X]  Hay que filtrar el tipo de evento
-[ ] ~~Faltaría la tabla de tbc_patologia~~
-[X] Probar integración con testcontainers
-[X] Verificar todos los campos que hay que actualizar en tbc_guardia
-[X] Implementar middleware para manejo de excepciones 
-[X] ~~Implementar autenticación por JWT~~ Autenticación tipo OAUTH2
-[X] Implementar tests para generación de registros
-[X] Implementar la ejecución de un script que cree las bases y tablas necesarias en SQLite
-[X] Corregir problema de conexión con SQLite usando Hikari
+Tests de integración
 
 ## Run the service
 
@@ -126,6 +133,8 @@ make docker-build
 
 Or build and run the service via the multi-stage `Dockerfile` configuration as part of a CI workflow.
 
+-----------------------------------------------------------------------------------------------------------------------------------------------
+Project created with [deps-new](https://github.com/seancorfield/deps-new) and the [practicalli/service template](https://github.com/practicalli/project-templates)
 
 ## License
 
