@@ -33,12 +33,12 @@
   "System Component management with Donut"
   {::donut/defs
    {:env
-    {:app-version "0.1.0"
-     :app-env :prod
+    {:app-env :prod
      :env-conf #::donut{:start (fn cargar-configuracion
                                  [{{:keys [perfil]} ::donut/config}] 
                                  (read-config (io/resource "config.edn") {:profile perfil}))
-                        :config {:perfil (donut/local-ref [:app-env])}}}
+                        :config {:perfil (donut/local-ref [:app-env])}}
+     :app-version (donut/local-ref [:env-conf :version])}
     :event-log
     {:publisher
      #::donut{:start (fn mulog-publisher-start
@@ -130,4 +130,3 @@
                        :config {:db (donut/ref [:conexiones])
                                 :env (donut/ref [:env :app-env])}}}}})
  
-  

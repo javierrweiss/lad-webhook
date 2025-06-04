@@ -28,8 +28,7 @@
 ;; to support the development workflow
 (defmethod donut/named-system :dev
   [_] (donut/system :donut.system/repl
-                    {[:env :app-env] :dev
-                     [:env :app-version] "0.0.0-SNAPSHOT"
+                    {[:env :app-env] :dev 
                      [:services :http-server ::donut/config :options :join?] false
                      #_#_[:conexiones :maestros ::donut/config] {:specs (:maestros conexiones)}
                      #_#_[:conexiones :maestros ::donut/post-start] (fn [{{:keys [specs]} ::donut/config}]

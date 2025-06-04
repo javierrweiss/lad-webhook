@@ -22,11 +22,15 @@
 (ns build
   (:require
    [clojure.tools.build.api :as build-api]
-   [clojure.pprint :as pprint]))
+   [clojure.pprint :as pprint]
+   [aero.core :refer [read-config]]
+   [clojure.java.io :as io]))
 
 
 ;; ---------------------------------------------------------
 ;; Project configuration
+
+(def version (-> (read-config (io/resource "config.edn") {:profile :prod}) :version))
 
 (def project-config
   "Project configuration to support all tasks"
