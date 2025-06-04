@@ -37,7 +37,7 @@
   {:class-directory "target/classes"
    :main-namespace  'sanatoriocolegiales/lad-webhook.service
    :project-basis   (build-api/create-basis)
-   :uberjar-file    "target/sanatoriocolegiales-lad-webhook-standalone-0.0.1.jar"})
+   :uberjar-file    (str "target/sanatoriocolegiales-lad-webhook-standalone-" version ".jar")})
 
 (defn config
   "Display build configuration"
