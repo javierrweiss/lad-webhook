@@ -1,8 +1,9 @@
 (ns sanatoriocolegiales.lad-webhook.service-test
-  (:require [clojure.test :refer [deftest is testing use-fixtures run-test run-all-tests]]
+  (:require [clojure.test :refer [deftest is testing use-fixtures run-test run-all-tests run-tests]]
             [donut.system :as ds]
             [sanatoriocolegiales.lad-webhook.api.atencion-guardia :as atencion-guardia]
             [sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia :as lad-guardia]
+            [sanatoriocolegiales.lad-webhook.seguridad.validacion :as validacion]
             [sanatoriocolegiales.lad-webhook.router :refer [app]]
             [clj-test-containers.core :as tc]
             [next.jdbc :as jdbc]
@@ -314,12 +315,17 @@
                                :bases_auxiliares bases_auxiliares
                                :maestros (fn [] maestros)
                                :env :test}]
-                  (is (== 500 (:status ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
-                                                          (merge {:body-params {:datetime (.toString (Instant/now))
-                                                                                :event_type "CALL_ENDED"
-                                                                                :event_object call-ended}
-                                                                  :query-params {"client_id" "lad"
-                                                                                 "client_secret" "123456"}})))))))))
+                  (with-redefs [validacion/valida-paciente (fn [& _] (throw (ex-info "Error al guardar" {:type :sanatoriocolegiales.lad-webhook.error.error/excepcion-sql})))]
+                    (is (== 500
+                            (:status
+                             ((app sistema)
+                              (-> (mock/request :post "/lad/historia_clinica_guardia")
+                                  (merge {:body-params {:datetime (.toString (Instant/now))
+                                                        :event_type "CALL_ENDED"
+                                                        :event_object call-ended}
+                                          :query-params {"client_id" "lad"
+                                                         "client_secret" "123456"}}))))))))))
+
 (deftest dummy-connection-test
   (testing "Test de control que verifica operatividad de testcontainer"
 (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
@@ -340,7 +346,7 @@
                  :desal desal
                  :bases_auxiliares bases_auxiliares
                  :maestros (fn [] maestros)
-                 :env :test}
+                 :env :test} 
         paciente {:hc 145200
                   :fecha 20241002
                   :hora 1256
@@ -362,16 +368,16 @@
                   :histpactratam 123456
                   :histpacmotivo 123457
                   :medico "Galeno"
-                  :matricula 125546}
+                  :matricula 125546} 
         _ (println (str "Insertando registro en guardia... "
                         (jdbc/execute! ((:asistencial sistema))
                                        (aux/sql-insertar-registro-en-reservas 145200)
-                                       {:builder-fn rs/as-unqualified-kebab-maps})))
-        ejecucion (lad-guardia/ingresar-historia-a-sistema sistema paciente)]
+                                       {:builder-fn rs/as-unqualified-lower-maps})))
+        ejecucion (lad-guardia/ingresar-historia-a-sistema sistema paciente)] 
     (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
       (is (== (:id ejecucion) (:hc paciente))))
-    (let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-kebab-maps})
-          registro-histpac-txt (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-kebab-maps})]
+    (let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-lower-maps})
+          registro-histpac-txt (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-lower-maps})]
       (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
         (is (== 5 (count registro-histpac-txt)))
         (is (== 1 (count registro-histpac)))))))
@@ -379,6 +385,8 @@
 (comment 
   
   (run-all-tests)
+
+  (run-tests)
 
   (run-test ingreso-registros-db)
 
@@ -395,7 +403,7 @@
   (run-test cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
   
   (run-test cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500)
-
+   
   (run-test cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404)
 
   (run-test cuando-no-encuentra-paciente-escribe-en-tbl-ladguardia-fallidos)
@@ -484,6 +492,9 @@
       (:status ((app sistema) mock-req))
       #_(:asistencial sistema)
       #_(jdbc/execute! (:asistencial sistema) ["SELECT * FROM tbc_guardia"])))
+
+  
+
 
 
   :rcf)

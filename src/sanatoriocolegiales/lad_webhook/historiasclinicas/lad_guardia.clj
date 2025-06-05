@@ -27,7 +27,7 @@
            patient_name
            patient_external_id ;; Acá recibimos el número de HC
            ] :as req}]
-  #_(print req)
+  #_(tap> req)
   (let [[fecha hora] (extraer-fecha-y-hora order_id)
         [fecha-ini hora-ini] (extraer-fecha-y-hora call_start_datetime)
         hora-finalizacion (obtener-hora-finalizacion hora-ini call_duration)]
@@ -63,7 +63,8 @@
            histpacmotivo
            medico
            matricula
-           motivo]}]
+           motivo] :as data}]
+  (tap> data)
   (let [hora (obtener-hora reservashora)
         minutos (obtener-minutos reservashora)
         hora-fin (obtener-hora hora-final-atencion)
@@ -148,9 +149,9 @@
   [db registro-historia-paciente registro-historia-texto]
   (try
     (d/zip
-     (d/future (ejecuta! db (inserta-en-tbc-histpac registro-historia-paciente)))
-     (d/future (apply guarda-texto-de-historia db (take 2 registro-historia-texto)))
-     (d/future (apply guarda-texto-de-historia db (drop 2 registro-historia-texto))))
+     (d/future (ejecuta! (db) (inserta-en-tbc-histpac registro-historia-paciente)))
+     (d/future (apply guarda-texto-de-historia (db) (take 2 registro-historia-texto)))
+     (d/future (apply guarda-texto-de-historia (db) (drop 2 registro-historia-texto))))
     (catch Exception e (throw e))))
 
 (defn persiste-historia-clinica!
@@ -163,8 +164,8 @@
                 [hc hc-texto] (prepara-registros (assoc paciente
                                                         :histpactratam histpactratam
                                                         :histpacmotivo histpacmotivo
-                                                        :descripcion-patologia (-> descripcion-patologia first :pat-descrip)))]
-               (-> (crea-historia-clinica! ((:asistencial db)) hc hc-texto)
+                                                        :descripcion-patologia (-> descripcion-patologia first :pat_descrip)))]
+               (-> (crea-historia-clinica! (:asistencial db) hc hc-texto)
                    (d/catch Exception #(throw %)))))
 
 (defn ingresar-historia-a-sistema
@@ -172,7 +173,7 @@
   (when (persiste-historia-clinica! db paciente)
     {:id (:hc paciente)}))
 
- 
+
 (tests
 
  "Cuando event-object recibe request, devuelve mapa con tipos de datos esperados..."
@@ -218,7 +219,7 @@
                       :doctor_enrollment "123456",
                       :provider_id "5ef21520359c9f0087212b1f",
                       :patient_location_longitude -57.5351,
-                      :order_id "2024/01/05 14:16",
+                      :order_id "2024/01/05 14:00",
                       :call_doctor_comment "Evolucion ",
                       :patient_name "Christian Cieri",
                       :patient_age 38,
@@ -325,7 +326,7 @@
         desal (-> (system-repl/system) :donut.system/instances :env :env-conf :db-type :postgres :desal)
         req {:guar-hist-clinica 9777,
              :patologia "H92",
-             :hora-inicio-atencion 340, 
+             :hora-inicio-atencion 340,
              :medico "Amezqueta Marcela",
              :guar-obra 210,
              :guar-plan "4000",
@@ -347,9 +348,9 @@
               first))
     #_(prepara-registros req)
     #_(persiste-historia-clinica! {:asistencial asistencial
-                                 :desal desal} req)
+                                   :desal desal} req)
     #_@(apply crea-historia-clinica! asistencial registros))
-  
+
   (d/let-flow [a (do (Thread/sleep 1000)
                      1)
                b (do (Thread/sleep 2000) 2)
@@ -368,6 +369,25 @@
 
   (when (throw (ex-info "excepcion boluda" {}))
     1)
-  
+
   (Integer/parseInt "1234")
+
+
+
+  (try
+    (try
+      (throw (IllegalArgumentException. "Ex"))
+      (catch Exception e (throw e)))
+    (catch Exception e (tap> e)))
+
+
+  (try
+    (try
+      (throw (IllegalArgumentException. "Ex"))
+      (catch Exception e (throw (ex-info "Excepción Ex" {:message (ex-message e)
+                                                         :cause (ex-cause e)
+                                                         :exception e}))))
+    (catch Exception e (tap> e)))
+
+
   :rcf)

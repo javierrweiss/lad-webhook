@@ -419,6 +419,8 @@
   (ns-unmap *ns* 'message-type)
   (ns-unmap *ns* 'event-object)
 
+  (int? 0)
+  
   (java.time.Instant/now)
   
   (gen/generate (spec/gen ::event_type))

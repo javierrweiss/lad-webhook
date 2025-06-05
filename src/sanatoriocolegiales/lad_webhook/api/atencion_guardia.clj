@@ -12,7 +12,7 @@
 
 (defn procesa-atencion
   [request sys]
-  (tap> sys)
+  #_(tap> sys)
   (assoc
    (->> request
         valida-event-object

@@ -15,7 +15,7 @@
   [conn sentencia]
   (try
     (to/with-timeout timeout
-      (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-kebab-maps}))
+      (jdbc/execute! conn sentencia {:builder-fn rs/as-unqualified-lower-maps}))
     (catch Exception e (do (mulog/log ::excepcion-sql :fecha (LocalDateTime/now) :mensaje (ex-message e) :sentencia sentencia)
                            (throw (ex-info "ErrorSQL: No se pudo ejecutar la sentencia" {:type :sanatoriocolegiales.lad-webhook.error.error/excepcion-sql
                                                                                          :fecha (LocalDateTime/now)
@@ -43,21 +43,22 @@
   
   (def desal (-> (system-repl/system) :donut.system/instances :conexiones :desal))
   (def bases_auxiliares (-> (system-repl/system) :donut.system/instances :conexiones :bases_auxiliares))
-  (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial)) 
- 
+  (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial))
+  (def maestros (-> (system-repl/system) :donut.system/instances :conexiones :maestros))
+  
   (->> (jdbc/execute! desal (obtener-numerador) {:builder-fn rs/as-unqualified-kebab-maps})
-      (then #(-> % first :contador-entero)))
+       (then #(-> % first :contador-entero)))
   
   (obtiene-numerador! desal)
- 
+  
   (then #(-> % first :contador-entero) [{:contador-entero 0}])
 
   (actualiza-numerador 10)
-(ejecuta! asistencial ["PRAGMAF table_info(tbc_histpac_txt)"])
+  (ejecuta! asistencial ["PRAGMAF table_info(tbc_histpac_txt)"])
   (ejecuta! asistencial ["PRAGMA table_info(tbc_histpac_txt)"]) 
   (ejecuta! asistencial ["PRAGMA table_info(tbc_histpac)"])
   (ejecuta! asistencial ["PRAGMA table_info(tbc_guardia)"])
-   
+  
   (ejecuta! (asistencial) ["SELECT guar_fechaingreso, guar_horaingreso FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
   (tap> (ejecuta! (asistencial) ["SELECT * FROM tbc_guardia"]))
   (ejecuta! asistencial ["SELECT * FROM tbc_guardia WHERE guar_histclinica = ?" 182222])
@@ -71,7 +72,7 @@
   (ejecuta! bases_auxiliares ["SELECT * FROM tbl_ladguardia_fallidos"])
   (ejecuta! bases_auxiliares ["SELECT rowid, hc, fechaingreso, horaingreso FROM tbl_ladguardia_fallidos"])
   (ejecuta! asistencial 
-                  ["INSERT INTO tbc_guardia (
+            ["INSERT INTO tbc_guardia (
                     Guar_HistClinica,Guar_FechaIngreso, Guar_HoraIngreso, Guar_Especialidad, Guar_Estado, 
                     Guar_FechaIngreso1, Guar_HoraIngreso1, Guar_HistClinica1, Guar_Especialidad1, Guar_Estado1, 
                     Guar_FechaIngreso3, Guar_HoraIngreso3, Guar_Especialidad3, Guar_Estado3, Guar_ApeNom, Guar_Obra, 
@@ -85,11 +86,17 @@
                     0, 0, 0, 0, 0, 0, '', 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '', 0)"])
   
 
-   (if-let [paciente (seq (ejecuta! asistencial (sanatoriocolegiales.lad-webhook.sql.enunciados/selecciona-guardia 180022 20240808 1430)))]
-     paciente
-     :not-found)
+  (if-let [paciente (seq (ejecuta! asistencial (sanatoriocolegiales.lad-webhook.sql.enunciados/selecciona-guardia 180022 20240808 1430)))]
+    paciente
+    :not-found)
   
   (sql-auxiliar/crear-tabla-tbl-ladguardia-fallidos bases_auxiliares)
   
+  (ejecuta! (asistencial) ["SELECT reservasfech, reservashora, reservasobra, reservasobrpla, reservasnroben FROM tbc_reservas WHERE (reservashiscli = ?) AND (reservasmed = ?)" 
+                           838922
+                           999880])
+  
+  (ejecuta! (maestros) ["SELECT pat_descrip FROM tbc_patologia WHERE pat_codi = ?" 3264])
+  
 
-  )
+  :rcf)

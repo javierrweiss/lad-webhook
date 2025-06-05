@@ -70,6 +70,8 @@
     
    (let [[hour & minutes] (str 156)]
      [(Integer/parseInt (str hour)) (->> minutes (apply str) (Integer/parseInt))])
+
+     (obtener-hora 12000000)
   )  
 
 (tests 
