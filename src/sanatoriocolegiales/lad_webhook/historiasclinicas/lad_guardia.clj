@@ -9,9 +9,17 @@
                                                                     obtener-minutos
                                                                     extraer-fecha-y-hora
                                                                     obtener-hora-finalizacion]]
+   [sanatoriocolegiales.lad-webhook.sql.conexiones :refer [devolver]]
    [hyperfiddle.rcf :refer [tests]]
    [clojure.edn :as edn]
-   [clojure.java.io :as io]))
+   [clojure.java.io :as io]
+   [com.brunobonacci.mulog :as µ]
+   [next.jdbc :as jdbc]
+   [com.potetm.fusebox.timeout :as to])
+  (:import java.time.LocalDateTime))
+
+(def timeout
+  (to/init {::to/timeout-ms 10000}))
 
 (defn extraer-event-object
   "Recibe el event-object del request y devuelve un mapa con los datos pre-procesados"
@@ -51,7 +59,7 @@
            reservasfech
            reservashora
            hora-inicio-atencion
-           hora-final-atencion 
+           hora-final-atencion
            reservasobra
            reservasobrpla
            reservasnroben
@@ -64,7 +72,7 @@
            medico
            matricula
            motivo] :as data}]
-  (tap> data)
+  #_(tap> data)
   (let [hora (obtener-hora reservashora)
         minutos (obtener-minutos reservashora)
         hora-fin (obtener-hora hora-final-atencion)
@@ -82,19 +90,19 @@
       minutos
       0
       2
-      407
+      407 
       hc
       reservasfech
       hc
       407
-      999880
+      999880 
       histpacmotivo
       0
       0
       hora-fin
       minutos-fin
       0
-      descripcion-patologia 
+      descripcion-patologia
       3264
       histpactratam
       medico
@@ -116,7 +124,7 @@
       0
       "N"
       0]
-   ;; tbc_histpac_txt
+     ;; tbc_histpac_txt
      [histpactratam diagnostico histpacmotivo (str "Motivo: " motivo " Tratamiento: " historia) medico matricula]]))
 
 (defn guarda-texto-de-historia
@@ -135,38 +143,71 @@
                                      s))
          cantidad (count textos)
          contador (atom 1)]
-     (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 0 0 "" cantidad]))
+     (jdbc/execute! conn (inserta-en-tbc-histpac-txt [numerador 1 0 0 "" cantidad]))
      (doseq [text textos :let [t (if-not medico (str "Diagnostico: " text) text)]]
-       (ejecuta! conn (inserta-en-tbc-histpac-txt [numerador 1 @contador @contador t 0]))
+       (jdbc/execute! conn (inserta-en-tbc-histpac-txt [numerador 1 @contador @contador t 0]))
        (swap! contador inc))
      (when medico
-       (ejecuta!
-        conn
+       (jdbc/execute!
+         conn
         (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) profesional-y-matricula cantidad]))))))
 
-(defn crea-historia-clinica!
-  "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y tres vectores con los datos a ser persistidos"
-  [db registro-historia-paciente registro-historia-texto]
-  (try
-    (d/zip
-     (d/future (ejecuta! (db) (inserta-en-tbc-histpac registro-historia-paciente)))
-     (d/future (apply guarda-texto-de-historia (db) (take 2 registro-historia-texto)))
-     (d/future (apply guarda-texto-de-historia (db) (drop 2 registro-historia-texto))))
-    (catch Exception e (throw e))))
+(defn ejecutar-tx-historia-clinica!
+  "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y dos vectores con los datos a ser persistidos"
+  [db registro-historia-paciente registro-historia-texto] 
+  (let [[reg1 reg2] (take 2 registro-historia-texto)
+        [reg3 reg4] (drop 2 registro-historia-texto)]
+    (try
+      (to/with-timeout 
+        timeout
+        (jdbc/with-transaction [conn db]
+          (jdbc/execute! conn (inserta-en-tbc-histpac registro-historia-paciente))
+          (guarda-texto-de-historia conn reg1 reg2)
+          (guarda-texto-de-historia conn reg3 reg4)))
+      (catch Exception e (µ/log ::error-al-crear-historia-clinica :mensaje (ex-message e) :datos (ex-data e) :fecha (LocalDateTime/now)))
+      ;; OJO! with-transaction si recibe una conexión no la cierra. Caso contrario si recibe un datasource.
+      (finally (devolver db)))))
+
+(comment
+  
+  (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial))
+
+  (let [paciente {:hc 1000001 
+                  :hora-inicio-atencion 1259
+                  :hora-final-atencion 1422 
+                  :nombre "Pedro Manuel Juarez"
+                  :historia "eh?c dcs sdac "
+                  :patologia "patos"
+                  :diagnostico "logia asdsas"
+                  :motivo "Motivado re"
+                  :reservasfech 20250101
+                  :reservashora 1125
+                  :reservasobra 1820
+                  :reservasobrpla "sdssdds"
+                  :reservasnroben "dssfdsd"
+                  :medico "Marcoandrea Gallegos"
+                  :matricula 10101010}
+        [hc hc-texto] (prepara-registros (assoc paciente
+                                                :histpactratam 99
+                                                :histpacmotivo 99 
+                                                :descripcion-patologia "Motivo!!!"))]
+    #_(tap> hc)
+    (tap> (ejecutar-tx-historia-clinica! asistencial hc hc-texto)))
+  
+  
+  :rcf)
 
 (defn persiste-historia-clinica!
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
-  [db paciente]
-  #_(tap> paciente)
-  @(d/let-flow [histpactratam (obtiene-numerador! (:desal db))
-                histpacmotivo (obtiene-numerador! (:desal db))
-                descripcion-patologia (ejecuta! ((:maestros db)) (busca-en-tbc-patologia 3264))
-                [hc hc-texto] (prepara-registros (assoc paciente
-                                                        :histpactratam histpactratam
-                                                        :histpacmotivo histpacmotivo
-                                                        :descripcion-patologia (-> descripcion-patologia first :pat_descrip)))]
-               (-> (crea-historia-clinica! (:asistencial db) hc hc-texto)
-                   (d/catch Exception #(throw %)))))
+  [db paciente] 
+  (let [histpactratam (obtiene-numerador! (:desal db))
+        histpacmotivo (obtiene-numerador! (:desal db))
+        descripcion-patologia (ejecuta! ((:maestros db)) (busca-en-tbc-patologia 3264))
+        [hc hc-texto] (prepara-registros (assoc paciente
+                                                :histpactratam histpactratam
+                                                :histpacmotivo histpacmotivo
+                                                :descripcion-patologia (-> descripcion-patologia first :pat_descrip)))]
+    (ejecutar-tx-historia-clinica! ((:asistencial db)) hc hc-texto)))
 
 (defn ingresar-historia-a-sistema
   [db paciente]
@@ -268,11 +309,11 @@
     :histpacmotivo 545656
     :medico "JUNA MACENO"
     :matricula 1234587})
-
+ 
  (let [registros (prepara-registros test-obj)]
    (count registros) := 2
    (mapv count registros) := [40 6] 
-   (mapv type (first registros))  := [java.lang.Long
+  (mapv type (first registros))  := [java.lang.Long
                                        java.lang.Long
                                        java.lang.Integer
                                        java.lang.Integer
@@ -389,5 +430,93 @@
                                                          :exception e}))))
     (catch Exception e (tap> e)))
 
+
+  (def valores [1000001
+                20250101
+                11
+                25
+                0
+                2
+                407
+                1000001
+                20250101
+                1000001
+                407
+                999880
+                222220
+                0
+                0
+                14
+                22
+                0
+                "Motivo!!!"
+                3264
+                111110
+                "Marcoandrea Gallegos"
+                10101010
+                12
+                59
+                0
+                0
+                0
+                ""
+                1820
+                "sdssdds"
+                ""
+                "dssfdsd"
+                0
+                ""
+                0
+                0
+                0
+                "N"
+                0])
+  (def columnas
+    [:histpacnro ;; hc
+     :histpacfec ;; fecha reservas
+     :histpach ;; hora
+     :histpacm ;; minutos
+     :histpacr ;; resto (segundos...) completar con ceros
+     :histpace ;; 2, guardia
+     :histpacespfir ;; 407
+     :histpacnro1 ;; hc
+     :histpacfec1 ;; fecha reservas
+     :histpacnro2 ;; hc
+     :histpacespfir1 ;; 407
+     :histpacmedfir ;; 999880 (con dígito verificador)
+     :histpacmotivo ;; numerador => Hace referencia al diagnóstico
+     :histpacestudi ;; 0 
+     :histpachorasobre ;; 0
+     :histpachfinal ;; hora final atención
+     :histpacmfinal ;; minutos hora final atención
+     :histpacrfinal ;; completar con ceros
+     :histpacdiagno ;; diagnóstico => sacar de tbc_patologia
+     :histpacpatolo ;; 3264 
+     :histpactratam ;; motivo (guardar acá numerador ) tbl_parametros param_id 16, inc contador_entero y guardar ese número
+     :histpacmedfirnya ;; nombre médico (doctor_name)
+     :histpacmedfirmat ;; matricula (doctor_enrollment_type)
+     :histpachatenc ;; call_start_datetime
+     :histpacmatenc  ;; minutos
+     :histpacratenc ;; 00
+     :histpacderiva ;; 0
+     :histpacderivads ;; 0
+     :histpacderivasec ;; ""
+     :histpacobra ;; obra
+     :histpacpplan ;; plan 
+     :histpacplan ;; plan 
+     :histpacafil ;; nro afiliado
+     :histpacpedambula ;; 0
+     :histpacconshiv ;; ""
+     :histpacinterconsu ;; 0
+     :histpacentregado ;; 0
+     :histpacctro ;; 0
+     :histpacyodo ;; "N"
+     :histpaccancd ;; 0
+     ])
+  
+  (count valores)
+  (count columnas)
+
+  
 
   :rcf)
