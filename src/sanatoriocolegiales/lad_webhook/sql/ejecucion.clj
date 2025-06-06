@@ -96,7 +96,13 @@
                            838922
                            999880])
   
-  (ejecuta! (maestros) ["SELECT pat_descrip FROM tbc_patologia WHERE pat_codi = ?" 3264])
+  (dotimes [_ 10]
+    (println (ejecuta! (maestros) ["SELECT pat_descrip FROM tbc_patologia WHERE pat_codi = ?" 3264])))
   
-
+  (dotimes [_ 21]
+    (future (ejecuta! (maestros) ["SELECT pat_descrip FROM tbc_patologia WHERE pat_codi = ?" 3264])))
+  
+  (dotimes [_ 1000] 
+    (future (tap> (ejecuta! bases_auxiliares ["SELECT * FROM tbl_ladguardia_fallidos"]))))
+   
   :rcf)
