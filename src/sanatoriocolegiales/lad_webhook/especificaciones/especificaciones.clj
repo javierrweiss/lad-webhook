@@ -47,26 +47,16 @@
 
 (spec/def ::event_type #{"CALL_ENDED" "PRESCRIPTION" "PRACTICES" "CASE_CLOSED" "COULD_NOT_CONTACT" "APPOINTMENT_CREATED" "APPOINTMENT_CANCELLED"})
 
-(spec/def ::call_id uuid-spec)
-
-(spec/def ::patient_name name-spec)
-
-(spec/def ::patient_id numero-string-spec)
-
-(spec/def ::provider_id uuid-spec)
-
-(spec/def ::doctor_id numero-string-spec)
-
-(spec/def ::call_resolution #{"resolved" "urgent" "referred"})
-
-(spec/def ::call_start_datetime instant-spec)
-
-(spec/def ::patient_external_id numero-string-spec)
-
 ;; Debe ser fecha y hora con formato YYYY/MM/dd HH:MM Debe coincidir con el ingreso de Guardia
 (spec/def ::order_id custom-date-spec) 
 
 (spec/def ::rest_indication boolean?)
+
+(spec/def ::call_start_datetime instant-spec)
+
+(spec/def ::call_id uuid-spec)
+
+(spec/def ::call_resolution #{"resolved" "urgent" "referred"})
 
 (spec/def ::call_motive string?)
 
@@ -83,6 +73,12 @@
 (spec/def ::call_doctor_rating int?)
 
 (spec/def ::call_patient_comment string?)
+
+(spec/def ::patient_name name-spec)
+
+(spec/def ::patient_id numero-string-spec)
+
+(spec/def ::patient_external_id numero-string-spec)
 
 (spec/def ::patient_age (spec/and nat-int? #(< % 120)))
 
@@ -104,6 +100,10 @@
 (spec/def ::patient_location_country_code (spec/with-gen (spec/and string? #(re-matches #"[A-Z]{2}" %))
                                             (fn [] (spec/gen #{"BZ" "FR" "NM" "FT" "OP" "AR" "US"}))))
 
+(spec/def ::patient (spec/keys :req-un [::name ::document_number]))
+
+(spec/def ::doctor_id numero-string-spec)
+
 (spec/def ::doctor_name name-spec)
 
 (spec/def ::doctor_enrollment_type #{"MN" "MP" "OP" "ON" "CRM" "MM"})
@@ -111,6 +111,8 @@
 (spec/def ::doctor_enrollment numero-string-spec)
 
 (spec/def ::doctor_enrollment_prov uppercase-letter-spec)
+
+(spec/def ::doctor (spec/keys :req-un [::name ::doctor_id ::cuil]))
 
 (spec/def ::medicines (spec/coll-of map?)) 
 
@@ -121,6 +123,8 @@
 (spec/def ::document_number string?)
 
 (spec/def ::start_date string?)
+
+(spec/def ::provider_id uuid-spec)
 
 (spec/def ::provider string?)
 
@@ -133,10 +137,6 @@
 (spec/def ::appointment_date string?)
 
 (spec/def ::user string?)
-
-(spec/def ::doctor (spec/keys :req-un [::name ::doctor_id ::cuil]))
-
-(spec/def ::patient (spec/keys :req-un [::name ::document_number]))
 
 (spec/def :call_ended/event_object (spec/keys :req-un [::call_id
                                                        ::patient_name
@@ -422,6 +422,8 @@
   (int? 0)
   
   (java.time.Instant/now)
+
+  (gen/sample (spec/gen ::patient_location_latitude))
   
   (gen/generate (spec/gen ::event_type))
 
