@@ -2,7 +2,7 @@
   (:require
    [manifold.deferred :as d]
    [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac
-                                                           inserta-en-tbc-histpac-txt 
+                                                           inserta-en-tbl-hist-txt 
                                                            busca-en-tbc-patologia]]
    [sanatoriocolegiales.lad-webhook.sql.ejecucion :refer [ejecuta! obtiene-numerador!]]
    [sanatoriocolegiales.lad-webhook.historiasclinicas.utils :refer [obtener-hora
@@ -125,58 +125,43 @@
       "N"
       0]
      ;; tbc_histpac_txt
-     [histpactratam diagnostico histpacmotivo (str "Motivo: " motivo " Tratamiento: " historia) medico matricula]]))
-
-(defn guarda-texto-de-historia
-  ([conn numerador texto]
-   (guarda-texto-de-historia conn numerador texto nil nil))
-  ([conn numerador texto medico matricula]
-   (let [len (count texto)
-         textos (if (> len 77)
-                  (->> (partition-all 60 texto)
-                       (map #(apply str %)))
-                  [texto])
-         profesional-y-matricula (let [s (str "Profesional: " medico " Matricula: " matricula)
-                                       len (count s)]
-                                   (if (> len 77)
-                                     (->> s (take 77) (apply str))
-                                     s))
-         cantidad (count textos)
-         contador (atom 1)]
-     (jdbc/execute! conn (inserta-en-tbc-histpac-txt [numerador 1 0 0 "" cantidad]))
-     (doseq [text textos :let [t (if-not medico (str "Diagnostico: " text) text)]]
-       (jdbc/execute! conn (inserta-en-tbc-histpac-txt [numerador 1 @contador @contador t 0]))
-       (swap! contador inc))
-     (when medico
-       (jdbc/execute!
-         conn
-        (inserta-en-tbc-histpac-txt [numerador 1 (inc @contador) (inc @contador) profesional-y-matricula cantidad]))))))
+     [hc
+      reservasfech
+      hora
+      1
+      (str "Motivo " "Nro. " histpacmotivo ": " motivo)
+      (str "Diagnóstico: " diagnostico "\nTratamiento " "Nro. " histpactratam ": " historia "\nMédico: " medico "\nMatrícula: " matricula)]]))
 
 (defn ejecutar-tx-historia-clinica!
   "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y dos vectores con los datos a ser persistidos"
-  [db registro-historia-paciente registro-historia-texto]
-  #_(tap> db)
-  (let [[reg1 reg2] (take 2 registro-historia-texto)
-        [reg3 reg4] (drop 2 registro-historia-texto)]
-    (try
+  [asist-conn desal-conn registro-historia-paciente registro-historia-texto]
+  #_(tap> db) 
+  (let [asist (asist-conn)
+        desal desal-conn]
+    (try 
       (to/with-timeout
         timeout
-        (jdbc/with-transaction [conn db]
-          (jdbc/execute! conn (inserta-en-tbc-histpac registro-historia-paciente))
-          (guarda-texto-de-historia conn reg1 reg2)
-          (guarda-texto-de-historia conn reg3 reg4)))
+        (jdbc/with-transaction [asist asist
+                                desal desal]
+          (jdbc/execute! asist (inserta-en-tbc-histpac registro-historia-paciente))
+          (jdbc/execute! desal (inserta-en-tbl-hist-txt registro-historia-texto))))
+
       ;;Devolverá true si no arroja excepción!
       true
+
       (catch Exception e (do
                            (µ/log ::error-al-crear-historia-clinica :mensaje (ex-message e) :datos (ex-data e) :fecha (LocalDateTime/now))
                            (throw (ex-info "Error al crear historia clínica" {:mensaje (ex-message e)
                                                                               :datos (ex-data e)
                                                                               :fecha (LocalDateTime/now)}))))
-      ;; OJO! with-transaction si recibe una conexión no la cierra. Caso contrario si recibe un datasource.
-      (finally (devolver db)))))
 
+      ;; OJO! with-transaction si recibe una conexión no la cierra. Caso contrario si recibe un datasource.
+      (finally (do (devolver asist)
+                   (devolver desal))))))
+ 
 (comment
   (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial))
+  (def desal (-> (system-repl/system) :donut.system/instances :conexiones :desal))
   (let [paciente {:hc 1000001
                   :hora-inicio-atencion 1259
                   :hora-final-atencion 1422
@@ -197,46 +182,23 @@
                                                 :histpacmotivo 1990
                                                 :descripcion-patologia "Motivo!!!"))]
     #_(tap> hc)
-    #_(tap> (ejecutar-tx-historia-clinica! (asistencial) hc hc-texto))
-    #_(tap> (to/with-timeout
-              timeout
-              (jdbc/with-transaction [conn (asistencial)]
-                (apply guarda-texto-de-historia conn (take 2 hc-texto)))))
-    (tap> (apply guarda-texto-de-historia (asistencial) (drop 2 hc-texto))))
-
-  (tap> (guarda-texto-de-historia (asistencial) 77777711
-                                  "Prueba muy larga est e eee repdsvp p 
-                                                     wrpopoasgzpmbpr gopsjpowporgdjpo 
-                                                     jrgopfdbjmotrg djbjdefsbpxocggrpfjdboj
-                                                     pgofjdbpgogsfxbjcjgposjvxbvfgpsfbcpoxvcvx
-                                                     dfdafdsbxc  esrgdhfnsdfgzfbvc zgsgxgbx ewee
-                                                     ewr r rerwe agest rthhhrtesgdxnfxrte sges
-                                                    ewerqwreweteytrytere waryethr rwahsgjd er
-                                                     oioiiojjlkjjk jkewljkljf klwejflkjelk  jlkfjwelkfwf
-                                                          sgdgewfa<sgzfdgxndafdsgzdg nxngdfgsdfaafsgdb
-                                                          gbs waefsgz fdbdfsgz sgzhdxngdres gdgxnfdgfs 
-                                                          errgfhdgh aesgbd bdtyh zdncbxzfdshd jhgdfsazvx easdg
-                                                          s gfdhgdgdfs dgxbsetgfb gsg hdgnggra  sghdrgd trsgads
-                                                          e sgzeaetsdhtgsre twredfgf awrtrzeh dzgfar wtzrgfs 
-                                                           egsrdhgxfhdr tes dearstgfd fgtszegdetsgrd etgr trhgzs
-                                                           grdh tesd raesgfe fsd retsgf"))
-
-  (tap> (guarda-texto-de-historia (asistencial) 17777777 "texto corto"))
-
+    (tap> (ejecutar-tx-historia-clinica! asistencial desal hc hc-texto)))
+  
   :dbg
   :rcf)
 
 (defn persiste-historia-clinica!
   "Toma la información del paciente y crea la historia clínica. Recibe el request y la conexión a la BD."
-  [db paciente] 
-  (let [histpactratam (obtiene-numerador! (:desal db))
-        histpacmotivo (obtiene-numerador! (:desal db))
-        descripcion-patologia (ejecuta! ((:maestros db)) (busca-en-tbc-patologia 3264))
-        [hc hc-texto] (prepara-registros (assoc paciente
-                                                :histpactratam histpactratam
-                                                :histpacmotivo histpacmotivo
-                                                :descripcion-patologia (-> descripcion-patologia first :pat_descrip)))]
-    (ejecutar-tx-historia-clinica! ((:asistencial db)) hc hc-texto)))
+  [{:keys [asistencial desal maestros]} paciente]
+  (let [histpactratam (obtiene-numerador! desal)
+        histpacmotivo (obtiene-numerador! desal)
+        descripcion-patologia (ejecuta! (maestros) (busca-en-tbc-patologia 3264))
+        [hc hc-texto] (prepara-registros (assoc
+                                          paciente
+                                          :histpactratam histpactratam
+                                          :histpacmotivo histpacmotivo
+                                          :descripcion-patologia (-> descripcion-patologia first :pat_descrip)))]
+    (ejecutar-tx-historia-clinica! asistencial desal hc hc-texto)))
 
 (defn ingresar-historia-a-sistema
   [db paciente]
@@ -340,48 +302,7 @@
  
  (let [registros (prepara-registros test-obj)]
    (count registros) := 2
-   (mapv count registros) := [40 6] 
-   (mapv type (first registros))  := [java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Integer
-                                      java.lang.Integer
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Integer
-                                      java.lang.Integer
-                                      java.lang.Long
-                                      java.lang.String
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.String
-                                      java.lang.Long
-                                      java.lang.Integer
-                                      java.lang.Integer
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.String
-                                      java.lang.Long
-                                      java.lang.String
-                                      java.lang.String
-                                      java.lang.String
-                                      java.lang.Long
-                                      java.lang.String
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.Long
-                                      java.lang.String
-                                      java.lang.Long]
-   (mapv type (last registros)) := [java.lang.Long java.lang.String java.lang.Long java.lang.String java.lang.String java.lang.Long])
+   (mapv count registros) := [40 6])
 
  "Cuando persiste HC devuelve id"
 

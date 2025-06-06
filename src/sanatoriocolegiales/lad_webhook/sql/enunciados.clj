@@ -47,15 +47,15 @@
                          ]
                :values [values]}))
 
-(defn inserta-en-tbc-histpac-txt
+(defn inserta-en-tbl-hist-txt
   [values]
-  (sql/format {:insert-into :tbc_histpac_txt
-               :columns [:txt1
-                         :txt1g 
-                         :txt2 
-                         :txt3 
-                         :txt4 
-                         :txt6]
+  (sql/format {:insert-into :tbl-hist-txt
+               :columns [:ht_histclin
+                         :ht_fecha 
+                         :ht_hora 
+                         :ht_entrada 
+                         :ht_motivo 
+                         :ht_tratamiento]
                :values [values]}))
 
 (defn inserta-en-tbl-ladguardia-fallidos
