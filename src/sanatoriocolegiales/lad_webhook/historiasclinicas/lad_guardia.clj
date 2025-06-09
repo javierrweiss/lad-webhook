@@ -1,6 +1,5 @@
 (ns sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia
-  (:require
-   [manifold.deferred :as d]
+  (:require 
    [sanatoriocolegiales.lad-webhook.sql.enunciados :refer [inserta-en-tbc-histpac
                                                            inserta-en-tbl-hist-txt 
                                                            busca-en-tbc-patologia]]
@@ -13,6 +12,7 @@
    [hyperfiddle.rcf :refer [tests]]
    [clojure.edn :as edn]
    [clojure.java.io :as io]
+   [clojure.string :as string]
    [com.brunobonacci.mulog :as µ]
    [next.jdbc :as jdbc]
    [com.potetm.fusebox.timeout :as to])
@@ -197,7 +197,7 @@
                                           paciente
                                           :histpactratam histpactratam
                                           :histpacmotivo histpacmotivo
-                                          :descripcion-patologia (-> descripcion-patologia first :pat_descrip)))]
+                                          :descripcion-patologia (-> descripcion-patologia first :pat_descrip string/trim)))]
     (ejecutar-tx-historia-clinica! asistencial desal hc hc-texto)))
 
 (defn ingresar-historia-a-sistema
