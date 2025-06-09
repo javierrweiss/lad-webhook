@@ -337,15 +337,15 @@
   (is (seq (jdbc/execute! bases_auxiliares ["SELECT NOW()"])))
   (is (seq (jdbc/execute! desal ["SELECT NOW()"]))))))
 
-#_(deftest ingreso-registros-db 
+(deftest ingreso-registros-db 
   (let [asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
         maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
         bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
         desal (get-in ds/*system* [::ds/instances :desal :conexion])
-        sistema {:asistencial (fn [] asistencial)
+        sistema {:asistencial (fn [] (jdbc/get-connection asistencial))
                  :desal desal
                  :bases_auxiliares bases_auxiliares
-                 :maestros (fn [] maestros)
+                 :maestros (fn [] (jdbc/get-connection maestros))
                  :env :test} 
         paciente {:hc 145200
                   :fecha 20241002
@@ -374,10 +374,10 @@
                                        (aux/sql-insertar-registro-en-reservas 145200)
                                        {:builder-fn rs/as-unqualified-lower-maps})))
         ejecucion (lad-guardia/ingresar-historia-a-sistema sistema paciente)] 
-    (tap> ejecucion)
+    #_(tap> ejecucion)
     (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
       (is (== (when ejecucion (:id ejecucion)) (:hc paciente))))
-    #_(let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-lower-maps})
+    (let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-lower-maps})
             registro-txt (jdbc/execute! desal ["SELECT * FROM tbl_hist_txt"] {:builder-fn rs/as-unqualified-lower-maps})]
       (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
         (is (== 1 (count registro-txt)))

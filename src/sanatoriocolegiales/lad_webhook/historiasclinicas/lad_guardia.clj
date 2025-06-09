@@ -162,7 +162,7 @@
 (comment
   (def asistencial (-> (system-repl/system) :donut.system/instances :conexiones :asistencial))
   (def desal (-> (system-repl/system) :donut.system/instances :conexiones :desal))
-  (let [paciente {:hc 1000001
+  (let [paciente {:hc 1000022
                   :hora-inicio-atencion 1259
                   :hora-final-atencion 1422
                   :nombre "Pedro Manuel Juarez"
@@ -176,7 +176,7 @@
                   :reservasobrpla "sdssdds"
                   :reservasnroben "dssfdsd"
                   :medico "Marcoandrea Gallegos"
-                  :matricula 10101010}
+                  :matricula 1010}
         [hc hc-texto] (prepara-registros (assoc paciente
                                                 :histpactratam 1990
                                                 :histpacmotivo 1990

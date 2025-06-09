@@ -140,6 +140,12 @@
     (println "Usando el reader implementado por Clojure")
     (time
      (slurp (io/resource "payload_model.edn"))))
+  
+  (mapv count particion)
+
+  (count v1)
+  (count v2)
+(count v3)
 
   #_()) ; End of rich comment
 
