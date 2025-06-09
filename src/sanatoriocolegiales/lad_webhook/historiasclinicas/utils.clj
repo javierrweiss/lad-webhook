@@ -47,7 +47,7 @@
   [hora]
   (if-not (number? hora)
     (throw (ex-info "La hora no es un número" {:hora hora}))
-    (->> hora str (drop 2) (apply str) (Integer/parseInt))))
+    (->> hora str (drop 2) (take 2) (apply str) (Integer/parseInt))))
 
 (comment
   
@@ -72,6 +72,7 @@
      [(Integer/parseInt (str hour)) (->> minutes (apply str) (Integer/parseInt))])
 
      (obtener-hora 12000000)
+   (obtener-minutos 16530000)
   )  
 
 (tests 
@@ -91,5 +92,8 @@
  (obtener-hora-finalizacion 2350 15) := 5
 
  (obtener-hora "Camba") :throws clojure.lang.ExceptionInfo
+ (obtener-hora 12000000) := 12
  (obtener-minutos "dae qefs arwef") :throws clojure.lang.ExceptionInfo
+ (obtener-minutos 16530000) := 53
+ (obtener-minutos 12000000) := 0
  )     
