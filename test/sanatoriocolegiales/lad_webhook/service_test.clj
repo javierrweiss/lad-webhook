@@ -245,10 +245,10 @@
           maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
           bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
           desal (get-in ds/*system* [::ds/instances :desal :conexion])
-          sistema {:asistencial (fn [] asistencial)
+          sistema {:asistencial (fn [] (jdbc/get-connection asistencial))
                    :desal desal
                    :bases_auxiliares bases_auxiliares
-                   :maestros (fn [] maestros)
+                   :maestros (fn [] (jdbc/get-connection maestros))
                    :env :test}]
       (->> (:patient_external_id call-ended)
            (Integer/parseInt)
@@ -378,9 +378,9 @@
     (testing "Cuando ingresa exitosamente los registros, devuelve id (hc) del paciente"
       (is (== (when ejecucion (:id ejecucion)) (:hc paciente))))
     #_(let [registro-histpac (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac"] {:builder-fn rs/as-unqualified-lower-maps})
-          registro-histpac-txt (jdbc/execute! asistencial ["SELECT * FROM tbc_histpac_txt"] {:builder-fn rs/as-unqualified-lower-maps})]
+            registro-txt (jdbc/execute! desal ["SELECT * FROM tbl_hist_txt"] {:builder-fn rs/as-unqualified-lower-maps})]
       (testing "Cuando ingresa exitosamente los registros, se obtiene la cantidad adecuada de registros por tabla"
-        (is (== 5 (count registro-histpac-txt)))
+        (is (== 1 (count registro-txt)))
         (is (== 1 (count registro-histpac)))))))
  
 (comment 

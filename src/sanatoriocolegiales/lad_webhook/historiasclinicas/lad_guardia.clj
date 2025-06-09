@@ -72,7 +72,7 @@
            medico
            matricula
            motivo] :as data}]
-  #_(tap> data)
+  (tap> data)
   (let [hora (obtener-hora reservashora)
         minutos (obtener-minutos reservashora)
         hora-fin (obtener-hora hora-final-atencion)
@@ -137,7 +137,7 @@
   [asist-conn desal-conn registro-historia-paciente registro-historia-texto]
   #_(tap> db) 
   (let [asist (asist-conn)
-        desal desal-conn]
+        desal (jdbc/get-connection desal-conn)]
     (try 
       (to/with-timeout
         timeout
