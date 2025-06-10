@@ -72,7 +72,7 @@
            medico
            matricula
            motivo] :as data}]
-  (tap> data)
+  #_(tap> data)
   (let [hora (obtener-hora reservashora)
         minutos (obtener-minutos reservashora)
         hora-fin (obtener-hora hora-final-atencion)
@@ -135,7 +135,7 @@
 (defn ejecutar-tx-historia-clinica!
   "Persiste 3 registros a sus respectivas tablas. Recibe una conexión y dos vectores con los datos a ser persistidos"
   [asist-conn desal-conn registro-historia-paciente registro-historia-texto]
-  #_(tap> db) 
+  (tap> registro-historia-paciente) 
   (let [asist (asist-conn)
         desal (jdbc/get-connection desal-conn)]
     (try 

@@ -88,6 +88,8 @@
   ;; tools.build `build.clj` built script
   :build/task
   {:replace-paths ["."]
+   :extra-paths ["resources"]
+   :extra-deps {aero/aero  {:mvn/version "1.1.6"}}
    :replace-deps  {io.github.clojure/tools.build {:mvn/version "0.10.5"}}
    :ns-default    build}}}
   ;; ------------

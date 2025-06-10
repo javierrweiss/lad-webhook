@@ -56,4 +56,5 @@
                           :test "123456"
                           :prod #ref [:secrets :client-secret]}
  :service-port #profile {:prod #ref [:secrets :port]
-                         :dev 2000}}
+                         :dev 2000}
+ :version "0.0.1"}
