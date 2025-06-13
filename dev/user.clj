@@ -8,8 +8,7 @@
    [portal]  ; launch portal
    [portal.api :as inspect]
    [hyperfiddle.rcf]
-   ;; Logging
-   [com.brunobonacci.mulog :as mulog]  ; Event Logging
+   ;; Logging 
    [mulog-events]
    [clojure.java.io :as io]
    [clojure.edn :as edn]
@@ -87,7 +86,7 @@
 (comment
   (require '[clojure.repl.deps :refer :all])
   (add-lib '{org.clojure/test.check {:mvn/version "1.1.1"}}) 
-  
+   
   (restart)
   (stop)      
   (start) 

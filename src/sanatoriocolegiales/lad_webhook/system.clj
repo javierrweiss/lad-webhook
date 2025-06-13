@@ -37,8 +37,7 @@
      :env-conf #::donut{:start (fn cargar-configuracion
                                  [{{:keys [perfil]} ::donut/config}] 
                                  (read-config (io/resource "config.edn") {:profile perfil}))
-                        :config {:perfil (donut/local-ref [:app-env])}}
-     :app-version (donut/local-ref [:env-conf :version])}
+                        :config {:perfil (donut/local-ref [:app-env])}}}
     :event-log
     {:publisher
      #::donut{:start (fn mulog-publisher-start
@@ -57,7 +56,7 @@
                       (instance))
 
               :config {:global-context {:app-name "sanatoriocolegiales lad-webhook service"
-                                        :version (donut/ref [:env :app-version])
+                                        :version (donut/ref [:env :env-conf :version])
                                         :environment (donut/ref [:env :app-env])} 
                        :publisher {:type :simple-file
                                    :filename "lad_webhook/events.log"
