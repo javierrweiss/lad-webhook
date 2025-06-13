@@ -1,7 +1,8 @@
 (ns sanatoriocolegiales.lad-webhook.especificaciones.especificaciones
   (:require [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as spec]
-            [hyperfiddle.rcf :refer [tests]])
+            [hyperfiddle.rcf :refer [tests]]
+            [clojure.test :as t])
   (:import java.time.Instant
            java.time.LocalDateTime
            (java.time.format DateTimeParseException
@@ -19,9 +20,9 @@
 (def phone-spec (spec/with-gen (spec/and string? #(re-matches #"\+\d+" %))
                   (fn [] (spec/gen (into #{} (mapv (fn [e] (str "+" e)) (rand-string-nums 3000000)))))))
 
-(def name-spec (spec/with-gen (spec/and string? #(re-matches #"([A-Z][a-z]+)(\s[A-Z][a-z]+){1,}" %))
-                 #(spec/gen #{"Julian Castro" "María Salazar" "Eder Vanega" "Tito Fuentes" "Tom Cruise" "Ana Molina" "Mirko Kovac" "Chimbo Chimiborazo" "Samba Llena"})))
-
+(def name-spec (spec/with-gen (spec/and string? #(re-matches #"[a-záäéëíïîóúñüA-ZÄÁËÉÏÍÎÓÚÑÜ]+(?:\s+[a-záäéëíïîóúñüA-ZÄÁËÉÏÎÍÓÚÑÜ]+)+" %))
+                 #(spec/gen #{"Julian Castro" "María Salazar" "Eder Vanega" "Tito Fuentes" "Tom Cruise" "Ana Molina" "Mirko Kovac" "Chimbo Chimiborazo" "Samba Llena" "NAHIARA ALLAMPRESE"})))
+ 
 (def region-spec (into #{} (conj (mapv #(-> % char str) (range 65 91)) "BR" "PY"))) 
  
 (def uuid-spec string?) 
@@ -79,7 +80,7 @@
 
 (spec/def ::patient_name name-spec)
 
-(spec/def ::patient_id numero-string-spec)
+(spec/def ::patient_id string?)
 
 (spec/def ::patient_external_id numero-string-spec)
 
@@ -105,7 +106,7 @@
 
 (spec/def ::patient (spec/keys :req-un [::name ::document_number]))
 
-(spec/def ::doctor_id numero-string-spec)
+(spec/def ::doctor_id string?)
 
 (spec/def ::doctor_name name-spec)
 
@@ -265,17 +266,25 @@
 
  (spec/valid? ::patient_name "Christian Ciero") := true
 
- (spec/valid? ::patient_name "Christian pio") := false
+ (spec/valid? ::patient_name "Christian pio") := true
 
- (spec/valid? ::patient_name "vhristian Ciero") := false
+ (spec/valid? ::patient_name "NAHIARA ALLAMPRESE") := true 
+
+ (spec/valid? ::patient_name "Zolon THOMAS") := true
+
+ (spec/valid? ::patient_name "Caín Nuñez") := true
+
+ (spec/valid? ::patient_name "CAÏN NUÑEZ SALÓN") := true
+ 
+ (spec/valid? ::patient_name "vhristian Ciero") := true
 
  (spec/valid? ::patient_name "Christian Ciero Martinez") := true
 
- (spec/valid? ::patient_id "Christian Ciero") := false
+ (spec/valid? ::patient_id "Christian Ciero") := true
 
- (spec/valid? ::patient_id "12 23") := false
+ (spec/valid? ::patient_id "12 23") := true
 
- (spec/valid? ::patient_id "125ñlsa1") := false
+ (spec/valid? ::patient_id "125ñlsa1") := true
 
  (spec/valid? ::patient_id "3566") := true
 
