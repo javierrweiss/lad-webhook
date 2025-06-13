@@ -7,6 +7,8 @@
            (java.time.format DateTimeParseException
                              DateTimeFormatter)))
 
+;; Documentación: https://www.llamandoaldoctor.com/developers/#/webhooks
+
 (defn rand-string-nums
   [max]
   (take 100 (repeatedly #(rand-int max))))
@@ -20,16 +22,9 @@
 (def name-spec (spec/with-gen (spec/and string? #(re-matches #"([A-Z][a-z]+)(\s[A-Z][a-z]+){1,}" %))
                  #(spec/gen #{"Julian Castro" "María Salazar" "Eder Vanega" "Tito Fuentes" "Tom Cruise" "Ana Molina" "Mirko Kovac" "Chimbo Chimiborazo" "Samba Llena"})))
 
-(def uppercase-letter-spec (spec/with-gen (spec/and string? #(re-matches #"[A-Z]" %))
-                             (fn [] (spec/gen #{"A" "B" "C" "D" "E" "F" "G" "H" "I" "J" "K"}))))
-
-(def uuid-spec (spec/with-gen (fn [val] 
-                                (if (string? val) 
-                                  (uuid? (try 
-                                           (java.util.UUID/fromString val)
-                                           (catch IllegalArgumentException e false)))
-                                  (uuid? val)))
-                 #(spec/gen (into #{} (mapv str (take 100 (repeatedly random-uuid))))))) 
+(def region-spec (into #{} (conj (mapv #(-> % char str) (range 65 91)) "BR" "PY"))) 
+ 
+(def uuid-spec string?) 
 
 (def instant-spec (spec/with-gen (fn [d] 
                                    (if (string? d)
@@ -39,7 +34,7 @@
                                      false))
                     #(spec/gen (conj #{} (.toString (Instant/now))))))
 
-(def custom-date-spec (spec/with-gen (spec/and string? #(re-matches #"\d{4}(/|-)\d{2}(/|-)\d{2} \d{2}:\d{2}" %))
+(def custom-date-spec (spec/with-gen (spec/and string? #(re-matches #"(\d{4}(-)\d{2}(-)\d{2}) \d{2}:\d{2}|(\d{4}(/)\d{2}(/)\d{2}) \d{2}:\d{2}" %))
                        #(spec/gen #{(-> (LocalDateTime/now)
                                         (.format (DateTimeFormatter/ofPattern "uuuu/MM/dd HH:mm")))})))
  
@@ -56,8 +51,16 @@
 
 (spec/def ::call_id uuid-spec)
 
-(spec/def ::call_resolution #{"resolved" "urgent" "referred"})
-
+(spec/def ::call_resolution #{"solved" 
+                              "urgent"
+                              "referred"
+                              "connectionFailed"
+                              "couldNotContact"
+                              "wrongPhone"
+                              "consultationPreviouslySolved"
+                              "patientDischarged"
+                              "discontinueMonitoring"}) 
+ 
 (spec/def ::call_motive string?)
 
 (spec/def ::call_duration nat-int?)
@@ -94,8 +97,8 @@
 (spec/def ::patient_location_longitude double?)
 
 (spec/def ::patient_location_city string?)
-
-(spec/def ::patient_location_region_code uppercase-letter-spec)
+ 
+(spec/def ::patient_location_region_code region-spec) 
 
 (spec/def ::patient_location_country_code (spec/with-gen (spec/and string? #(re-matches #"[A-Z]{2}" %))
                                             (fn [] (spec/gen #{"BZ" "FR" "NM" "FT" "OP" "AR" "US"}))))
@@ -110,7 +113,7 @@
 
 (spec/def ::doctor_enrollment numero-string-spec)
 
-(spec/def ::doctor_enrollment_prov uppercase-letter-spec)
+(spec/def ::doctor_enrollment_prov region-spec)
 
 (spec/def ::doctor (spec/keys :req-un [::name ::doctor_id ::cuil]))
 
@@ -255,12 +258,10 @@
  (spec/valid? ::event_type "(spec/valid? ::event_type \"Chingada\")") := false
 
  (spec/valid? ::event_type "COULD_NOT_CONTACT") := true
+ 
+ (spec/valid? ::call_id "67ee7bb6812ed1489773ed9e") := true   
 
- (spec/valid? ::call_id "2232snspas3223") := false
-
- (spec/valid? ::call_id (random-uuid)) := true
-
- (spec/valid? ::call_id "e4ff8723-9257-45ad-a9ab-4639bb106648") := true
+ (spec/valid? ::call_id "e4ff8723-9257-45ad-a9ab-4639bb106648") := true 
 
  (spec/valid? ::patient_name "Christian Ciero") := true
 
@@ -413,7 +414,7 @@
 
  :rcf)
 
-
+ 
 (comment
 
   (ns-unmap *ns* 'message-type)
