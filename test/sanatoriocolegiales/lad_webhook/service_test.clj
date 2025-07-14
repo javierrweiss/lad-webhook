@@ -493,9 +493,35 @@
       (:status ((app sistema) mock-req))
       #_(:asistencial sistema)
       #_(jdbc/execute! (:asistencial sistema) ["SELECT * FROM tbc_guardia"])))
-
-  
-
-
-
   :rcf)
+
+
+(comment
+  ;; Stress test
+  
+  (require '[org.httpkit.client :as http]
+           '[cheshire.core :as json])
+
+  #_(tap>)
+  (dotimes [_ 1000]
+    (let [get-call-ended (fn [] (gen/generate (spec/gen :call_ended/event_object)))]
+      @(http/post "http://127.0.0.1:2000/lad/historia_clinica_guardia" {:headers {"Content-Type" "application/json"}
+                                                                        :body (json/generate-string {:datetime (.toString (Instant/now))
+                                                                                                     :event_type "CALL_ENDED"
+                                                                                                     :event_object (get-call-ended)})
+                                                                        :query-params {"client_id" "lad"
+                                                                                       "client_secret" "123456"}})))
+  
+  (dotimes [_ 150]
+    (let [get-call-ended (fn [] (gen/generate (spec/gen :call_ended/event_object)))]
+      @(http/post "http://127.0.0.1:2000/lad/historia_clinica_guardia" {:headers {"Content-Type" "application/json"}
+                                                                        :body (json/generate-string {:datetime (.toString (Instant/now))
+                                                                                                     :event_type "CALL_ENDED"
+                                                                                                     :event_object (get-call-ended)})
+                                                                        :query-params {"client_id" "lad"
+                                                                                       "client_secret" "123456"}})))
+
+(+ 1 1)
+
+
+  )
