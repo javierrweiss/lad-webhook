@@ -1,8 +1,7 @@
 (ns sanatoriocolegiales.lad-webhook.especificaciones.especificaciones
   (:require [clojure.spec.gen.alpha :as gen]
             [clojure.spec.alpha :as spec]
-            [hyperfiddle.rcf :refer [tests]]
-            [clojure.test :as t])
+            [hyperfiddle.rcf :refer [tests]])
   (:import java.time.Instant
            java.time.LocalDateTime
            (java.time.format DateTimeParseException
@@ -93,9 +92,9 @@
 
 (spec/def ::patient_gender #{"M" "F"})
 
-(spec/def ::patient_location_latitude double?)
+(spec/def ::patient_location_latitude number?)
 
-(spec/def ::patient_location_longitude double?)
+(spec/def ::patient_location_longitude number?)
 
 (spec/def ::patient_location_city string?)
  
@@ -330,6 +329,18 @@
 
  (spec/valid? ::patient_location_country_code "552") := false
 
+ (spec/valid? ::patient_location_latitude 552) := true
+
+ (spec/valid? ::patient_location_latitude 556.99) := true
+
+ (spec/valid? ::patient_location_latitude -56.9932) := true
+
+ (spec/valid? ::patient_location_longitude 12.996) := true
+
+ (spec/valid? ::patient_location_longitude -12.996) := true
+
+ (spec/valid? ::patient_location_longitude 1545) := true
+
  (spec/valid? ::order_id "2024-02-05 10:45") := true
 
  (spec/valid? ::order_id "2024/02/05 10:45") := true
@@ -337,7 +348,7 @@
  (spec/valid? ::order_id "2024-02-05 10/45") := false
 
  (spec/valid? ::order_id "2024-02/05 10:45") := false ;; Test falla
-
+ 
  (spec/valid? ::order_id "2024/02/05 10/45") := false
 
  (spec/valid? :message/message {:datetime (str (Instant/now))
@@ -425,6 +436,10 @@
 
  
 (comment
+  
+  (spec/valid? ::order_id "10/07/2025 14:06")
+
+  (spec/explain ::order_id "2025/07/10 14:06")
 
   (ns-unmap *ns* 'message-type)
   (ns-unmap *ns* 'event-object)
