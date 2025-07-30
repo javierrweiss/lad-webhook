@@ -49,4 +49,4 @@ resources/config.edn
 # Include ClojureScript Figwheel
 !figwheel-main.edn
 !*.cljs.edn
-
+.secrets.edn
