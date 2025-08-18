@@ -15,7 +15,7 @@
                          :histpacfec1 ;; fecha reservas
                          :histpacnro2 ;; hc
                          :histpacespfir1 ;; 407
-                         :histpacmedfir ;; 999880 (con dígito verificador)
+                         :histpacmedfir ;; 999880 (MEDICO DEMANDA ESPONTANEA : el paciente esta en el consultorio, el medico virtual) y 999870 (MEDICO CONSULTA INMEDIATA : el paciente y el medico estan virtual. El turno se da en el momento , ej llama al call center pide turno para que le lea el medico un informe y se le da turno inmediato.)
                          :histpacmotivo ;; numerador => Hace referencia al diagnóstico
                          :histpacestudi ;; 0 
                          :histpachorasobre ;; 0
@@ -75,7 +75,7 @@
   [histclinica]
   (sql/format {:select [:reservasfech :reservashora :reservasobra :reservasobrpla :reservasnroben] 
                :from :tbc_reservas
-               :where [:and [:= :reservashiscli histclinica] [:= :reservasmed 999880]]}))
+               :where [:and [:= :reservashiscli histclinica] [:in :reservasmed [999880 999870]]]}))
 
 (defn busca-en-tbc-patologia
   [codigo]
