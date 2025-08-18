@@ -18,9 +18,6 @@
 
 (def phone-spec (spec/with-gen (spec/and string? #(re-matches #"\+\d+" %))
                   (fn [] (spec/gen (into #{} (mapv (fn [e] (str "+" e)) (rand-string-nums 3000000)))))))
-
-(def name-spec (spec/with-gen (spec/and string? #(re-matches #"[a-záäéëíïîóúñüA-ZÄÁËÉÏÍÎÓÚÑÜ]+(?:\s+[a-záäéëíïîóúñüA-ZÄÁËÉÏÎÍÓÚÑÜ]+)+" %))
-                 #(spec/gen #{"Julian Castro" "María Salazar" "Eder Vanega" "Tito Fuentes" "Tom Cruise" "Ana Molina" "Mirko Kovac" "Chimbo Chimiborazo" "Samba Llena" "NAHIARA ALLAMPRESE"})))
  
 (def region-spec (into #{} (conj (mapv #(-> % char str) (range 65 91)) "BR" "PY"))) 
  
@@ -77,7 +74,7 @@
 
 (spec/def ::call_patient_comment string?)
 
-(spec/def ::patient_name name-spec)
+(spec/def ::patient_name string?)
 
 (spec/def ::patient_id string?)
 
@@ -107,7 +104,7 @@
 
 (spec/def ::doctor_id string?)
 
-(spec/def ::doctor_name name-spec)
+(spec/def ::doctor_name string?)
 
 (spec/def ::doctor_enrollment_type #{"MN" "MP" "OP" "ON" "CRM" "MM"})
 
@@ -436,7 +433,13 @@
 
  
 (comment
-  
+
+  (spec/explain ::order_id "30/07/2025 18:84")
+
+  (spec/valid? ::order_id "30/07/2025 18:34")
+
+  (spec/explain ::order_id "30/07/2025 18:34")
+
   (spec/valid? ::order_id "10/07/2025 14:06")
 
   (spec/explain ::order_id "2025/07/10 14:06")
@@ -445,11 +448,11 @@
   (ns-unmap *ns* 'event-object)
 
   (int? 0)
-  
+
   (java.time.Instant/now)
 
   (gen/sample (spec/gen ::patient_location_latitude))
-  
+
   (gen/generate (spec/gen ::event_type))
 
   (gen/sample (spec/gen ::event_type))
@@ -482,17 +485,17 @@
 
   (gen/generate (spec/gen ::patient_phone))
 
-  (gen/generate (spec/gen ::call_id)) 
+  (gen/generate (spec/gen ::call_id))
 
   (gen/generate (spec/gen ::order_id))
-  
-  (gen/generate (spec/gen :message/message)) 
-  
+
+  (gen/generate (spec/gen :message/message))
+
   (spec/explain :message/message (clojure.edn/read-string
                                   (slurp
                                    (clojure.java.io/resource "payload_model.edn"))))
-  
+
   (gen/generate (spec/gen :call_ended/event_object))
-  
+
   (gen/generate (spec/gen (spec/inst-in #inst "2025-01-01T01:17:19.813Z" #inst "2025-12-31T00:00:00.813Z")))
   :rcf)
