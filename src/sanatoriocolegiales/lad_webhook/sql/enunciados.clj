@@ -73,7 +73,7 @@
 
 (defn busca-paciente-en-reservas
   [histclinica]
-  (sql/format {:select [:reservasfech :reservashora :reservasobra :reservasobrpla :reservasnroben] 
+  (sql/format {:select [:reservasfech :reservashora :reservasobra :reservasobrpla :reservasnroben :reservasmed] 
                :from :tbc_reservas
                :where [:and [:= :reservashiscli histclinica] [:in :reservasmed [999880 999870]]]}))
 
