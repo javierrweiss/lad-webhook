@@ -57,4 +57,4 @@
                           :prod #ref [:secrets :client-secret]}
  :service-port #profile {:prod #ref [:secrets :port]
                          :dev 2000}
- :version "0.0.2"}
+ :version "0.0.3"}
