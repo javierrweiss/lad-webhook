@@ -136,6 +136,15 @@ Or build and run the service via the multi-stage `Dockerfile` configuration as p
 -----------------------------------------------------------------------------------------------------------------------------------------------
 Project created with [deps-new](https://github.com/seancorfield/deps-new) and the [practicalli/service template](https://github.com/practicalli/project-templates)
 
+## TODO
+
+1. Repensar qué hacer con la aplicación.
+    1.1. No está encontrando los pocos pacientes que pasan
+    1.2. El usuario pone cualquier cosa en el order_id y casi el 90% de las solicitudes fallan
+    1.3. Hay specs capaz muy estrictas que pueden causar entorpecimientos (e.g. doctor_name)
+2. Containerizar
+3. Crear CI pipeline    
+
 ## License
 
 Copyright © 2024 Jrivero
