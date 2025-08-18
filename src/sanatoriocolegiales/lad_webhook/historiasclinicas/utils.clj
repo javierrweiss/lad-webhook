@@ -51,6 +51,8 @@
 
 (comment
   
+  (extraer-fecha-y-hora "2025-05-12   12:43")
+
   (eduction 
    (comp 
     (filter (complement #{\T \Z \- \: \.})) 
@@ -75,18 +77,21 @@
    (obtener-minutos 16530000)
   )  
 
-(tests 
- (extraer-fecha-y-hora "2024-07-12T01:17:19.813Z") := [20240712 117] 
+(tests
+ (extraer-fecha-y-hora "2024-07-12T01:17:19.813Z") := [20240712 117]
  (extraer-fecha-y-hora "2024/11/10 10:40") := [20241110 1040]
  (extraer-fecha-y-hora "2024/12/31 10:40pm") := [20241231 1040]
  (extraer-fecha-y-hora "2024-01-23 00:01") := [20240123 1]
  (extraer-fecha-y-hora "2024-08-23 01:01") := [20240823 101]
- (extraer-fecha-y-hora "2024-08-23 00:00") := [20240823 0] 
+ (extraer-fecha-y-hora "2024-08-23 00:00") := [20240823 0]
+ (extraer-fecha-y-hora "2025-05-12   12:43") := [20250512 1243]
+ (extraer-fecha-y-hora "2030-05-12  10:43") := [20300512 1043]
+ (extraer-fecha-y-hora "2030-10-12        10:11") := [20301012 1011]
 
  (obtener-hora-finalizacion 1140 20) := 1200
  (obtener-hora-finalizacion 1155 20) := 1215
  (obtener-hora-finalizacion 859 15) := 914
- (obtener-hora-finalizacion 0 20) := 20 
+ (obtener-hora-finalizacion 0 20) := 20
  (obtener-hora-finalizacion 101 20) := 121
  (obtener-hora-finalizacion 59 25) := 124
  (obtener-hora-finalizacion 2350 15) := 5
@@ -95,5 +100,4 @@
  (obtener-hora 12000000) := 12
  (obtener-minutos "dae qefs arwef") :throws clojure.lang.ExceptionInfo
  (obtener-minutos 16530000) := 53
- (obtener-minutos 12000000) := 0
- )     
+ (obtener-minutos 12000000) := 0)     
