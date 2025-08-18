@@ -295,7 +295,7 @@
 
   (map #(dissoc % :especificaciones :system-config) logs)
 
+  (tap> (slurp "/mnt/c/Users/jrivero/Downloads/events.log/events.log"))
 
-
-
+  
   :rcf)

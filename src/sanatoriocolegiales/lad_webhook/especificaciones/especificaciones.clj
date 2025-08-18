@@ -31,7 +31,7 @@
                                      false))
                     #(spec/gen (conj #{} (.toString (Instant/now))))))
 
-(def custom-date-spec (spec/with-gen (spec/and string? #(re-matches #"(\d{4}(-)\d{2}(-)\d{2}) \d{2}:\d{2}|(\d{4}(/)\d{2}(/)\d{2}) \d{2}:\d{2}" %))
+(def custom-date-spec (spec/with-gen (spec/and string? #(re-matches #"(\d{4}(-)\d{2}(-)\d{2})\s{1,}\d{2}:\d{2}|(\d{4}(/)\d{2}(/)\d{2})\s{1,}\d{2}:\d{2}" %))
                        #(spec/gen #{(-> (LocalDateTime/now)
                                         (.format (DateTimeFormatter/ofPattern "uuuu/MM/dd HH:mm")))})))
  
@@ -348,6 +348,8 @@
  
  (spec/valid? ::order_id "2024/02/05 10/45") := false
 
+ (spec/valid? ::order_id "2024-02-05   10:45") := true
+
  (spec/valid? :message/message {:datetime (str (Instant/now))
                                 :event_type "PRESCRIPTION"
                                 :event_object {:call_id (str (random-uuid))
@@ -498,4 +500,9 @@
   (gen/generate (spec/gen :call_ended/event_object))
 
   (gen/generate (spec/gen (spec/inst-in #inst "2025-01-01T01:17:19.813Z" #inst "2025-12-31T00:00:00.813Z")))
+
+  (re-matches #"(\d{4}(-)\d{2}(-)\d{2})\s{1,}\d{2}:\d{2}|(\d{4}(/)\d{2}(/)\d{2})\s{1,}\d{2}:\d{2}" "2025/05/12     12:43")
+
+  (re-matches #"(\d{4}(-)\d{2}(-)\d{2}) \d{2}:\d{2}|(\d{4}(/)\d{2}(/)\d{2}) \d{2}:\d{2}" "2025-05-12 12:43")
+
   :rcf)
