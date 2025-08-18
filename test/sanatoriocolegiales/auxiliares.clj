@@ -22,14 +22,15 @@
        (str year month day))
      (Integer/parseInt 
       (str hour minute))]))
-
+ 
 (defn sql-insertar-registro-en-reservas
   [hc]
   (let [[fecha hora] (obtener-fecha-y-hora-aleatoria)
         benef (str (rand-int 1000000))
         obra (rand-int 10000)
         plan (str (rand-int 1000))
-        esp (rand-int 10000)]
+        esp (rand-int 10000)
+        codmed (rand-nth [999880 999870])]
     (sql/format {:insert-into :tbc_reservas
                  :columns [:reservashiscli
                            :reservasfech
@@ -46,7 +47,7 @@
                            :reservasmedicab
                            :reservasautoriza
                            :reservasnordeges]
-                 :values [[hc fecha hora benef obra plan 999880 esp 1 "F" "A" "S" "cualquier" "cualquier" "eges"]]})))
+                 :values [[hc fecha hora benef obra plan codmed esp 1 "F" "A" "S" "cualquier" "cualquier" "eges"]]})))
 
 
 (comment

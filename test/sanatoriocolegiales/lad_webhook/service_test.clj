@@ -262,6 +262,36 @@
                                                       :query-params {"client_id" "lad"
                                                                      "client_secret" "123456"}})))))))))
 
+(deftest cuando-se-inserta-paciente-guarda-en-histpac-mismo-codigo-medico-que-recibe-de-reservas
+  (testing "Cuando se insert paciente en tbc_histpac, se guarda el mismo código médico recibido de tbc_reservas"
+    (let [call-ended (gen/generate (spec/gen :call_ended/event_object))
+          asistencial (get-in ds/*system* [::ds/instances :asistencial :conexion])
+          maestros (get-in ds/*system* [::ds/instances :maestros :conexion])
+          bases_auxiliares (get-in ds/*system* [::ds/instances :bases_auxiliares :conexion])
+          desal (get-in ds/*system* [::ds/instances :desal :conexion])
+          sistema {:asistencial (fn [] (jdbc/get-connection asistencial))
+                   :desal desal
+                   :bases_auxiliares bases_auxiliares
+                   :maestros (fn [] (jdbc/get-connection maestros))
+                   :env :test}
+          [codmed hc] (let [hc (Integer/parseInt (:patient_external_id call-ended))
+                            sentencia (aux/sql-insertar-registro-en-reservas hc)
+                            codmed (nth sentencia 7)]
+                        (jdbc/execute! ((:asistencial sistema)) sentencia)
+                        (Thread/sleep 100) 
+                        [codmed hc])
+          _ ((app sistema) (-> (mock/request :post "/lad/historia_clinica_guardia")
+                               (merge {:body-params {:datetime (.toString (Instant/now))
+                                                     :event_type "CALL_ENDED"
+                                                     :event_object call-ended}
+                                       :query-params {"client_id" "lad"
+                                                      "client_secret" "123456"}})))
+          histpacmedfir (some-> (jdbc/execute! asistencial ["SELECT histpacmedfir FROM tbc_histpac WHERE histpacnro = ?" hc])
+                                first
+                                :tbc_histpac/histpacmedfir)]
+      (println histpacmedfir)
+      (is (== codmed histpacmedfir)))))
+
 (defspec cuando-recibe-solicitud-correcta-y-no-encuentra-paciente-devuelve-404
   10
   (prop/for-all [call-ended (spec/gen :call_ended/event_object)]
@@ -402,6 +432,8 @@
   (run-test cuando-recibe-objecto-invalido-devuelve-400) 
  
   (run-test cuando-recibe-solicitud-correcta-y-se-inserta-paciente-devuelve-201)
+
+  (run-test cuando-se-inserta-paciente-guarda-en-histpac-mismo-codigo-medico-que-recibe-de-reservas)
   
   (run-test cuando-recibe-solicitud-correcta-y-no-puede-guardar-devuelve-500)
    

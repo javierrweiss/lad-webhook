@@ -49,6 +49,10 @@
   (->> (jdbc/execute! desal (obtener-numerador) {:builder-fn rs/as-unqualified-kebab-maps})
        (then #(-> % first :contador-entero)))
   
+  (some-> (jdbc/execute! (asistencial) ["SELECT histpacmedfir FROM tbc_histpac WHERE histpacnro = ?" 53285])
+          first
+          :tbc_histpac/HistpacMedfir)
+  
   (obtiene-numerador! desal)
   
   (then #(-> % first :contador-entero) [{:contador-entero 0}])

@@ -86,12 +86,12 @@
 (comment
   (require '[clojure.repl.deps :refer :all])
   (add-lib '{org.clojure/test.check {:mvn/version "1.1.1"}}) 
-   
+  
   (restart)
   (stop)      
   (start) 
   
-  (tap> (:env (:donut.system/instances (system)))) 
+  (tap> (:donut.system/instances (system))) 
   #'system
   ((-> (system) :donut.system/instances :http :handler))
   
