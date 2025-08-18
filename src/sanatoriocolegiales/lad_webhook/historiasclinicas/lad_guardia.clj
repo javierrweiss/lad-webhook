@@ -58,6 +58,7 @@
   [{:keys [hc
            reservasfech
            reservashora
+           reservasmed
            hora-inicio-atencion
            hora-final-atencion
            reservasobra
@@ -95,7 +96,7 @@
       reservasfech
       hc
       407
-      999880 
+      reservasmed 
       histpacmotivo
       0
       0
