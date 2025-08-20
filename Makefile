@@ -60,7 +60,7 @@ deps: deps.edn  ## Prepare dependencies for test and dist targets
 	$(info --------- Download test and service libraries ---------)
 	clojure -P -M:test/run && clojure -P -T:build/task
 
-dist: build-uberjar ## Build and package Clojure service
+dist: build-uberjar docker-build ## Build and package Clojure service
 	$(info --------- Build and Package Clojure service ---------)
 
 # Remove files and directories after build tasks
@@ -105,7 +105,7 @@ build-jar: ## Build a jar archive of Clojure project
 	$(info --------- Build library jar ---------)
 	clojure -T:build/task jar
 
-build-uberjar: ## Build a uberjar archive of Clojure project & Clojure runtime
+build-uberjar: build-clean ## Build a uberjar archive of Clojure project & Clojure runtime
 	$(info --------- Build service Uberjar  ---------)
 	clojure -T:build/task uberjar
 
