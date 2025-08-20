@@ -31,7 +31,7 @@ resources/config.edn
 # Include Clojure tools
 !.cljstyle
 !.dir-locals.el
-!compose.yaml
+!compose.yml
 !Dockerfile
 !.dockerignore
 !.clj-kondo/config.edn
@@ -50,3 +50,4 @@ resources/config.edn
 !figwheel-main.edn
 !*.cljs.edn
 .secrets.edn
+!.secrets.edn.gpg
