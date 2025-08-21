@@ -24,6 +24,7 @@
 !docs/
 !src/
 !test/
+!resources/
 resources/config.edn
 !resources/init_asistencial.sql 
 !resources/init_bases_auxiliares.sql 
