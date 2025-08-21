@@ -129,3 +129,11 @@
                        :config {:db (donut/ref [:conexiones])
                                 :env (donut/ref [:env :app-env])}}}}})
  
+(comment
+  
+  (read-config (io/resource "config.edn") {:profile :prod})
+ 
+  (System/getenv "CISECRETS")
+
+  (slurp "C:\\Users\\jrivero\\.secrets.edn")
+  :rcf)

@@ -23,10 +23,15 @@ Endpoint de salud: https://lad-webhook-dev.sanatoriocolegiales.com.ar/system-adm
 
 Documentación Swagger API: https://lad-webhook-dev.sanatoriocolegiales.com.ar/index.html
 
+## Encriptar assets
+
+```shell
+gpg --symmetric --cipher-algo AES256 <file>
+```
 
 ## Project Status
 
-Tests de integración
+En producción
 
 ## Run the service
 
@@ -142,8 +147,7 @@ Project created with [deps-new](https://github.com/seancorfield/deps-new) and th
     1.1. ~~No está encontrando los pocos pacientes que pasan~~ => Había que agregar otro codmed: 999870
     1.2. El usuario pone cualquier cosa en el order_id y casi el 90% de las solicitudes fallan
     1.3. ~~Hay specs capaz muy estrictas que pueden causar entorpecimientos (e.g. doctor_name)~~
-2. Containerizar
-3. Crear CI pipeline    
+2. ~~Containerizar~~ 
 
 ## License
 

@@ -1,0 +1,19 @@
+services:
+  app:
+    build: .
+    ports:
+      - "2000:2000"
+    volumes:
+      - ./lad_webhook_logs:/app/lad_webhook
+    secrets:
+      - secrets.edn
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:2000/system-admin/status"]
+      interval: 15s
+      timeout: 5s
+      start_period: 60s
+    restart: always
+
+secrets:
+    secrets.edn:
+      file: ~/lad_webhook/.secrets.edn
