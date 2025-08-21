@@ -25,6 +25,10 @@
 !src/
 !test/
 resources/config.edn
+!resources/init_asistencial.sql 
+!resources/init_bases_auxiliares.sql 
+!resources/init_desal.sql 
+!resources/init_maestros.sql
 
 
 # ------------------------
