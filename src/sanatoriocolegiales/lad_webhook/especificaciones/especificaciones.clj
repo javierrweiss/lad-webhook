@@ -40,7 +40,7 @@
 (spec/def ::event_type #{"CALL_ENDED" "PRESCRIPTION" "PRACTICES" "CASE_CLOSED" "COULD_NOT_CONTACT" "APPOINTMENT_CREATED" "APPOINTMENT_CANCELLED"})
 
 ;; Debe ser fecha y hora con formato YYYY/MM/dd HH:MM Debe coincidir con el ingreso de Guardia
-(spec/def ::order_id custom-date-spec) 
+(spec/def ::order_id string?) 
 
 (spec/def ::rest_indication boolean?)
 
