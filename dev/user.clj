@@ -86,7 +86,7 @@
 (comment
   (require '[clojure.repl.deps :refer :all])
   (add-lib '{org.clojure/test.check {:mvn/version "1.1.1"}}) 
-  
+   
   (restart)
   (stop)      
   (start) 
@@ -100,7 +100,7 @@
 
   ;; Clojure 1.12.x onward
   #_(add-lib 'library-name)   ; find and add library
-  #_(sync-deps)               ; load dependencies in deps.edn (if not yet loaded)
+  (clojure.repl.deps/sync-deps)               ; load dependencies in deps.edn (if not yet loaded)
   #_()) ; End of rich comment
 ;; ---------------------------------------------------------
 
@@ -297,5 +297,6 @@
 
   (tap> (slurp "/mnt/c/Users/jrivero/Downloads/events.log/events.log"))
 
+  (tap> (slurp "/mnt/c/Users/Dell/Documents/events.log/events.log"))
   
   :rcf)
