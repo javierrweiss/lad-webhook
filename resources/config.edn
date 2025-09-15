@@ -29,12 +29,12 @@
                                              :dbtype "postgres"
                                              :username "desal"
                                              :password "desal2016"
-                                             :host "10.200.0.90"}
+                                             :host "10.200.0.190"}
                                      :bases_auxiliares {:dbname "bases_auxiliares"
                                                         :dbtype "postgres"
                                                         :username "auxiliar"
                                                         :password "auxi2013"
-                                                        :host "10.200.0.90"}}
+                                                        :host "10.200.0.190"}}
                           :relativity {:asistencial {:dbtype "relativity"
                                                      :dbname "asistencialsc9"
                                                      :classname "relativity.jdbc.Driver"
@@ -57,4 +57,4 @@
                           :prod #ref [:secrets :client-secret]}
  :service-port #profile {:prod #ref [:secrets :port]
                          :dev 2000}
- :version "0.0.3"}
+ :version "0.0.4"}
