@@ -9,14 +9,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/)
 * **Resolved** resolved issue
 * **Security** vulnerability related change
 
-## [Unreleased]
-
+## 0.1.0 - 2025-09-15
 ### Changed
+Flexibilizar spec de order_id
 
-## 0.1.0 - 2024-07-22
 
-### Added
 
-* [#1](https://github.com/practicalli/clojure/issues/1) Created sanatoriocolegiales/lad-webhook project with deps-new using practicalli.template/service
 
-[Unreleased]: https://github.com/sanatoriocolegiales/lad-webhook/compare/0.1.1...HEAD
