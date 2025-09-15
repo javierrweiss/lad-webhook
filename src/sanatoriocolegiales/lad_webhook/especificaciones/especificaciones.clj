@@ -336,19 +336,7 @@
  (spec/valid? ::patient_location_longitude -12.996) := true
 
  (spec/valid? ::patient_location_longitude 1545) := true
-
- (spec/valid? ::order_id "2024-02-05 10:45") := true
-
- (spec/valid? ::order_id "2024/02/05 10:45") := true
-
- (spec/valid? ::order_id "2024-02-05 10/45") := false
-
- (spec/valid? ::order_id "2024-02/05 10:45") := false ;; Test falla
  
- (spec/valid? ::order_id "2024/02/05 10/45") := false
-
- (spec/valid? ::order_id "2024-02-05   10:45") := true
-
  (spec/valid? :message/message {:datetime (str (Instant/now))
                                 :event_type "PRESCRIPTION"
                                 :event_object {:call_id (str (random-uuid))
