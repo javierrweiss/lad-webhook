@@ -75,7 +75,8 @@
   [histclinica]
   (sql/format {:select [:reservasfech :reservashora :reservasobra :reservasobrpla :reservasnroben :reservasmed] 
                :from :tbc_reservas
-               :where [:and [:= :reservashiscli histclinica] [:in :reservasmed [999880 999870]]]}))
+               :where [:= :reservashiscli histclinica]
+               #_[:and [:= :reservashiscli histclinica] [:in :reservasmed [999880 999870]]]}))
 
 (defn busca-en-tbc-patologia
   [codigo]
@@ -107,4 +108,8 @@
 
   (let [hc 1]
     (busca-paciente-en-reservas hc))
+  
+  (sql/format {:select [:reservasfech :reservashora :reservasobra :reservasobrpla :reservasnroben :reservasmed]
+               :from :tbc_reservas
+               :where [:and [:= :reservashiscli 'histclinica] [:in :reservasmed [999880 999870]]]})
   )

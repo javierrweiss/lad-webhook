@@ -281,22 +281,69 @@
                                                                                                          {"patient_id" "12345678",
                                                                                                           "doctor_enrollment_prov" "C"}})})
 
-  (def logs [{:publisher-config {:type :simple-file, :filename "lad_webhook/events.log"}, :local-time "2024-10-04T10:35:01.175016069", :mulog/namespace "sanatoriocolegiales.lad-webhook.system", :app-name "sanatoriocolegiales lad-webhook service", :mulog/timestamp 1728048901176, :environment :prod, :version "0.1.0", :mulog/trace-id "4zh2JToOXTW4ef0eBjsi_WBQuQvRLaKz", :mulog/event-name :sanatoriocolegiales.lad-webhook.system/log-publish-component}
-             {:especificaciones {:dbtype "relativity", :dbname "Maestros", :classname "relativity.jdbc.Driver", :user "ADMIN", :password "", :host "10.200.0.30", :port 1583}, :mulog/namespace "sanatoriocolegiales.lad-webhook.sql.conexiones", :app-name "sanatoriocolegiales lad-webhook service", :mulog/timestamp 1728048901329, :environment :prod, :version "0.1.0", :mulog/trace-id "4zh2JUNs5mUTM6L0MQ8kGQlNl3Sk4dm0", :mulog/event-name :sanatoriocolegiales.lad-webhook.sql.conexiones/connexion-simple-creada, :fecha "2024-10-04T10:35:01.329434876"}
-             {:especificaciones {:dbtype "postgres", :dbname "bases_auxiliares", :user "cabboud", :username "cabboud", :password "4Nt01n3.2024", :host "10.200.0.30"}, :mulog/namespace "sanatoriocolegiales.lad-webhook.sql.conexiones", :app-name "sanatoriocolegiales lad-webhook service", :mulog/timestamp 1728048901610, :environment :prod, :version "0.1.0", :mulog/trace-id  "4zh2JVQk82gQQ3OfrcsfqZQB3oaXRK8z", :mulog/event-name :sanatoriocolegiales.lad-webhook.sql.conexiones/connection-pool-creada, :fecha "2024-10-04T10:35:01.609888584"}
-             {:especificaciones {:dbtype "postgres", :dbname "desal", :user "desal", :username "desal", :password "desal2016", :host "10.200.0.30"}, :mulog/namespace "sanatoriocolegiales.lad-webhook.sql.conexiones", :app-name "sanatoriocolegiales lad-webhook service", :mulog/timestamp 1728048901749, :environment :prod, :version "0.1.0", :mulog/trace-id "4zh2JVwuxTYTdNT1e9w2ymaZ65GeImcV", :mulog/event-name :sanatoriocolegiales.lad-webhook.sql.conexiones/connection-pool-creada, :fecha "2024-10-04T10:35:01.749106378"}
-             {:especificaciones {:dbtype "relativity", :dbname "asistencial", :classname "relativity.jdbc.Driver", :user "ADMIN", :password "", :host "10.200.0.30", :port 1583}, :mulog/namespace "sanatoriocolegiales.lad-webhook.sql.conexiones", :app-name "sanatoriocolegiales lad-webhook service", :mulog/timestamp 1728048901753, :environment :prod, :version "0.1.0", :mulog/trace-id  "4zh2JVxrSywdznil60OzPrH1z3-wfouB", :mulog/event-name :sanatoriocolegiales.lad-webhook.sql.conexiones/connexion-simple-creada, :fecha "2024-10-04T10:35:01.753077066"}
-             {:app-name "sanatoriocolegiales lad-webhook service", :version "0.1.0", :environment :prod, :mulog/trace-id  "4zh2Jj4c4YkcxEMsjU6ZyF3sUdAZPSBp", :mulog/timestamp 1728048905543, :mulog/event-name :sanatoriocolegiales.lad-webhook.router/router-app, :mulog/namespace "sanatoriocolegiales.lad-webhook.router", :system-config {:maestros "relativity.jdbc.RelativityConnection@331e9a2a", :bases_auxiliares "HikariDataSource (null)", :desal "HikariDataSource (null)", :asistencial "relativity.jdbc.RelativityConnection@46cd4583", :env :prod}}
-             {:local-time "2024-10-04T10:35:05.764193464", :mulog/namespace "sanatoriocolegiales.lad-webhook.system", :app-name "sanatoriocolegiales lad-webhook service", :port 2000, :mulog/timestamp 1728048905764, :environment :prod, :version "0.1.0", :handler "clojure.lang.AFunction$1@26901437", :mulog/trace-id "4zh2JjuBJP-LR1g2N2WQkqHvpsj6qNsd", :mulog/event-name :sanatoriocolegiales.lad-webhook.system/http-server-component}
-             {:local-time "2024-10-04T10:41:45.984178605", :mulog/namespace "sanatoriocolegiales.lad-webhook.system", :app-name "sanatoriocolegiales lad-webhook service", :http-server-instance "clojure.lang.AFunction$1@5b755aa4", :mulog/timestamp 1728049305984, :environment :prod, :version "0.1.0", :mulog/trace-id #mulog/flake "4zh2g1q4lWQI0Dnqu6hQzk7rK4k5MM9S", :mulog/event-name :sanatoriocolegiales.lad-webhook.system/http-server-component-shutdown}
-             {:publisher  "com.brunobonacci.mulog.core$start_publisher_BANG_$stop_publisher__11673@458812b", :local-time "2024-10-04T10:41:45.999760863", :mulog/namespace "sanatoriocolegiales.lad-webhook.system", :app-name "sanatoriocolegiales lad-webhook service", :mulog/timestamp 1728049305999, :environment :prod, :version "0.1.0", :mulog/trace-id "4zh2g1tm_ZmXDXIlVgx6wX6Gn8sBRE0n", :mulog/event-name :sanatoriocolegiales.lad-webhook.system/log-publish-component-shutdown}])
 
-  (map #(remove #{:especificaciones :system-config} %) logs)
 
-  (map #(dissoc % :especificaciones :system-config) logs)
 
-  (tap> (slurp "/mnt/c/Users/jrivero/Downloads/events.log/events.log"))
+  (def log-05-03-2026 (str "[" (slurp "/mnt/c/Users/jrivero/events-lad-05-03-2026.log") "]"))
 
-  (tap> (slurp "/mnt/c/Users/Dell/Documents/events.log/events.log"))
+  (def raw-logs (clojure.edn/read-string {:readers {'mulog/flake str
+                                                    'object (fn [[_ _ obj-str]]
+                                                              (let [date-time (try
+                                                                                (java.time.LocalDateTime/parse obj-str)
+                                                                                (catch Exception e))]
+                                                                (if (instance? java.time.LocalDateTime date-time)
+                                                                  date-time
+                                                                  (str obj-str))))
+                                                    'Coercion str
+                                                    'Spec str
+                                                    'reitit.middleware.Middleware str
+                                                    'reitit.ring.Endpoint str
+                                                    'reitit.ring.Methods str
+                                                    'reitit.core.Match str
+                                                    'FormatAndCharset str
+                                                    'error str}} log-05-03-2026))
+
+  (tap> (first raw-logs))
+
+  (def periodo-mayo-en-adelante (filter
+                                 (fn [rw]
+                                   (when-let [f (:fecha rw)]
+                                     (java.time.LocalDateTime/.isAfter f (java.time.LocalDateTime/of 2026 3 1 0 0))))
+                                 raw-logs))
   
+  (tap> (drop 100 periodo-mayo-en-adelante))
+
+  (def excepciones-solicitud (->> periodo-mayo-en-adelante
+                                  (filterv #(= (:mulog/event-name %) :sanatoriocolegiales.lad-webhook.error.error/excepcion-en-solicitud))))
+  
+  (->> excepciones-solicitud
+       (filterv #(= "Request coercion failed" (:mensaje %)))
+       count)
+  
+  (->> excepciones-solicitud
+       (filterv #(= "Paciente no encontrado" (:mensaje %)))
+       count)
+  
+  (tap> (->> excepciones-solicitud
+             (filterv #(and (not= "Paciente no encontrado" (:mensaje %))
+                            (not= "Request coercion failed" (:mensaje %))))))
+  
+  (+ 166 129)
+  
+  (count excepciones-solicitud)
+
+  (def errores-al-crear-hc (->> periodo-mayo-en-adelante
+                                (filterv #(= (:mulog/event-name %) :sanatoriocolegiales.lad-webhook.historiasclinicas.lad-guardia/error-al-crear-historia-clinica))))
+
+  (tap> errores-al-crear-hc)
+
+
+  (keep (fn [m] (when (= "0.0.4" (:version m))
+                  m)) raw-logs)
+
+
+
   :rcf)
+
+
+

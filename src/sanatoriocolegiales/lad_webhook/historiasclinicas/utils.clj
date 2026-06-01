@@ -94,6 +94,8 @@
 
   (extraer-fecha-y-hora "2025/8/22 15:06")
   (extraer-fecha-y-hora "2025-05-12   12:43")
+  (extraer-fecha-y-hora "2026/03/25 16.37")
+  (extraer-fecha-y-hora "2026/4/13 17:43")
 
   (eduction
    (comp
