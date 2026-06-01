@@ -35,11 +35,20 @@ En producción
 
 ## Run the service
 
+Para correr debes tener el archivo ~/lad_webhook/.secrets.edn con todas las llaves correspondientes. Levantará en el puerto 2000.
+
 Run the service (clojure.main)
 
 ```shell
 clojure -M:run/service
 ```
+
+O preferiblemente
+
+```shell
+java -jar target/<sanatoriocolegiales...>.jar
+```
+
 
 ## Development
 
